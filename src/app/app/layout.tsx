@@ -74,7 +74,7 @@ export default function AppLayout({
                 Ajustes
               </Link>
               <Link
-                href="#"
+                href="/app/kpis"
                 className="text-muted-foreground flex items-center gap-4 pr-2.5 hover:text-foreground"
               >
                 <Gauge className="h-5 w-5"></Gauge>
