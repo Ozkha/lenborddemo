@@ -13,9 +13,11 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Bolt,
   CircleUser,
+  Gauge,
   ListTodo,
   Menu,
   Package2,
+  PanelLeftOpen,
   Plus,
   Users,
 } from "lucide-react";
@@ -28,16 +30,16 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   const [boardsList, setBoardList] = useState([
-    "Flexometro linter",
-    "Tornos de acero",
+    { name: "Flexometro Linter", id: "asdj1273jasd712" },
+    { name: "Tornos Acero", id: "jfhassn12as9an1" },
   ]);
   return (
     <>
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <header className="sticky z-40 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="shrink-0">
-              <Menu className="h-5 w-5" />
+              <PanelLeftOpen className="h-5 w-5" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
@@ -71,18 +73,32 @@ export default function AppLayout({
                 <Bolt className="h-5 w-5"></Bolt>
                 Ajustes
               </Link>
+              <Link
+                href="#"
+                className="text-muted-foreground flex items-center gap-4 pr-2.5 hover:text-foreground"
+              >
+                <Gauge className="h-5 w-5"></Gauge>
+                KPI's
+              </Link>
               <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
                 Tableros
               </p>
-              {boardsList.map((boardName) => (
-                <p key={boardName} className="text-muted-foreground">
-                  {boardName}
-                </p>
+              {boardsList.map((boardDetails) => (
+                <Link
+                  key={"board-" + boardDetails.id}
+                  href={"/app/board/" + boardDetails.id}
+                  className="text-muted-foreground"
+                >
+                  {boardDetails.name}
+                </Link>
               ))}
               <Button
                 variant={"ghost"}
                 onClick={() => {
-                  setBoardList([...boardsList, "Sin nombre"]);
+                  setBoardList([
+                    ...boardsList,
+                    { name: "Sin nombre", id: "kasdjashd123" },
+                  ]);
                 }}
               >
                 <Plus className={"h-5 w-5 mr-2"}></Plus>
@@ -93,7 +109,6 @@ export default function AppLayout({
         </Sheet>
 
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <p className="text-muted-foreground">Flexometro linter</p>
           <div className="ml-auto flex-1 sm:flex-initial"></div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
