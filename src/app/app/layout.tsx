@@ -15,7 +15,6 @@ import {
   CircleUser,
   Gauge,
   ListTodo,
-  Menu,
   Package2,
   PanelLeftOpen,
   Plus,
@@ -78,7 +77,7 @@ export default function AppLayout({
                 className="text-muted-foreground flex items-center gap-4 pr-2.5 hover:text-foreground"
               >
                 <Gauge className="h-5 w-5"></Gauge>
-                KPI's
+                KPI{"'"}s
               </Link>
               <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
                 Tableros
