@@ -60,14 +60,16 @@ function CategoryBar({ data, className }: CategoryBarProps) {
   return (
     <div className={cn(["w-full", className])}>
       <div className="w-full flex justify-around mb-1">
-        {data.map((val) => (
-          <p className="text-xs">{val.label}</p>
+        {data.map((val, i) => (
+          <p key={"label-" + val.color} className="text-xs">
+            {val.label}
+          </p>
         ))}
       </div>
       <div className="flex flex-row h-3">
         {data.map((val) => (
           <div
-            key={val.label}
+            key={val.color}
             className={cn([
               "h-full w-full first:rounded-l-md last:rounded-r-md",
               val.color,
@@ -253,7 +255,7 @@ export default function KpisPage() {
             </TableHeader>
             <TableBody>
               {kpisList.map((kpi) => (
-                <TableRow>
+                <TableRow key={"kpi-" + kpi.name}>
                   <TableCell className="font-medium">{kpi.name}</TableCell>
                   <TableCell className="hidden md:table-cell italic font-serif">
                     {kpi.metric}
@@ -364,7 +366,7 @@ export default function KpisPage() {
                           <p className="text-sm font-semibold">Campos</p>
                           <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
                             {kpi.fields.map((field) => (
-                              <li>{field}</li>
+                              <li key={"li-" + field}>{field}</li>
                             ))}
                           </ul>
                         </div>
