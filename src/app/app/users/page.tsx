@@ -26,14 +26,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -67,7 +59,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { CheckIcon, Ellipsis, PlusCircleIcon } from "lucide-react";
+import {
+  ArrowLeftRight,
+  CheckIcon,
+  Pencil,
+  PlusCircleIcon,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 type FacetedFilterProps = {
@@ -164,6 +162,8 @@ export default function UsersPage() {
     "B2: Flexometro",
   ];
 
+  const [isChangePassActive, setIsChangePassActive] = useState(false);
+
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
       <Card x-chunk="dashboard-06-chunk-0">
@@ -175,7 +175,9 @@ export default function UsersPage() {
           <div className="w-full flex justify-end">
             <Dialog>
               <DialogTrigger>
-                <Button>Nuevo Usuario</Button>
+                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                  Nuevo Usuario
+                </div>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -197,6 +199,7 @@ export default function UsersPage() {
                   placeholder="Ej. josermz / JOSERZ / JOSErm"
                 ></Input>
 
+                <Label htmlFor="inputpassword">Contraseña</Label>
                 <Input
                   type="password"
                   id="inputpassword"
@@ -238,7 +241,7 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {usersList.map((user) => (
-                <TableRow>
+                <TableRow key={user.user}>
                   <TableCell>
                     <div>
                       <div className="font-medium text-sm md:text-base">
@@ -276,12 +279,13 @@ export default function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Ellipsis className="w-4 h-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuLabel>
+                    <Dialog>
+                      <DialogTrigger>
+                        <Pencil className="w-4 h-4" />
+                      </DialogTrigger>
+                      <DialogContent className="mt-5">
+                        {/* TODO: Me quede aqui */}
+                        <div className="flex items-center gap-2">
                           <Badge
                             variant={
                               user.estado == "activo"
@@ -291,13 +295,73 @@ export default function UsersPage() {
                           >
                             {user.estado == "activo" ? "Activo" : "Bloqueado"}
                           </Badge>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Nueva Contrasenña</DropdownMenuItem>
-                        <DropdownMenuItem>Reasignar Tableros</DropdownMenuItem>
-                        <DropdownMenuItem>Bloquear / Activar</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <Button variant={"ghost"} size={"icon"}>
+                            <ArrowLeftRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium">{user.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {user.user}
+                          </p>
+                        </div>
+                        <Select defaultValue={user.rol.toLowerCase()}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="administrador">
+                              Administrador
+                            </SelectItem>
+                            <SelectItem value="manager">
+                              Manager de Tablero
+                            </SelectItem>
+                            <SelectItem value="trabajador">
+                              Trabajador
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FacetedFilter
+                          title="Tableros"
+                          options={boardOptions}
+                        />
+                        <Button
+                          onClick={() => {
+                            setIsChangePassActive(true);
+                          }}
+                          variant={isChangePassActive ? "default" : "secondary"}
+                          className="mt-4"
+                        >
+                          Cambiar Contraseña
+                        </Button>
+                        <div
+                          className={cn([
+                            "flex flex-col gap-3",
+                            isChangePassActive ? undefined : "hidden",
+                          ])}
+                        >
+                          <Input
+                            type="password"
+                            placeholder="Nueva Contraseña"
+                          />
+                          <Input
+                            type="password"
+                            placeholder="Confirmar Contraseña"
+                          />
+                          <Button
+                            variant={"ghost"}
+                            size={"icon"}
+                            className="w-full"
+                            onClick={() => {
+                              setIsChangePassActive(false);
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                            Cancelar
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}
