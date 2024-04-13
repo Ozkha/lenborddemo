@@ -1,20 +1,11 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import {
   Command,
@@ -23,7 +14,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -33,13 +23,20 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, CheckIcon, PlusCircleIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckIcon,
+  PlusCircleIcon,
+  Trash,
+} from "lucide-react";
 import { useState } from "react";
 
 type FacetedFilterProps = {
   title: string;
   options: string[];
 };
+
 function FacetedFilter({ title, options }: FacetedFilterProps) {
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
@@ -108,56 +105,70 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
 
 type TaskCardProps = {
   title: string;
+  tags: string[];
+  endDate: string;
+  assignedUser: string;
+  description: string;
+  problem: string;
+  cause: string;
 };
 
-function TaskCard() {
+function TaskCard({
+  title,
+  tags,
+  endDate,
+  assignedUser,
+  description,
+  problem,
+  cause,
+}: TaskCardProps) {
+  const [willDelete, setWillDelete] = useState(false);
   return (
     <Dialog>
+      {/* TODO: Agregar keys mas especificas. (con indice agregado talvez) */}
       <DialogTrigger className="max-w-[30rem]">
         <Card>
           <CardContent className="mt-5 flex flex-col">
             <div className="flex gap-1">
-              <Badge>Security</Badge>
-              <Badge>Tornos Flinter</Badge>
+              {tags.map((tagName) => (
+                <Badge key={"card-" + tagName}>{tagName}</Badge>
+              ))}
             </div>
             <h4 className="text-start scroll-m-20 text-base font-medium tracking-tight mt-2">
-              Comprar nuevos guantes de seguridad
+              {title}
             </h4>
             <div className="flex justify-start mt-2">
-              <p className="text-xs text-gray-500 mr-3">20/12/2024 </p>
+              <p className="text-xs text-gray-500 mr-3">{endDate}</p>
               <Separator orientation="vertical" />
-              <p className="text-xs text-gray-500">Jose Perales</p>
+              <p className="text-xs text-gray-500">{assignedUser}</p>
             </div>
           </CardContent>
         </Card>
       </DialogTrigger>
       <DialogContent>
         <div className="flex gap-1">
-          <Badge>Security</Badge>
-          <Badge>Tornos Flinter</Badge>
+          {tags.map((tagName) => (
+            <Badge key={"dialog-" + tagName}>{tagName}</Badge>
+          ))}
         </div>
         <h4 className="text-start scroll-m-20 text-lg font-medium tracking-tight">
-          Comprar nuevos guantes de seguridad
+          {title}
         </h4>
         <div className="flex justify-start">
-          <p className="text-xs text-gray-500 mr-3">20/12/2024 </p>
+          <p className="text-xs text-gray-500 mr-3">{endDate}</p>
           <Separator orientation="vertical" />
-          <p className="text-xs text-gray-500 ml-2">👤 Jose Perales</p>
+          <p className="text-xs text-gray-500 ml-2">👤 {assignedUser}</p>
         </div>
-        <p className="leading-7 [&:not(:first-child)]:mt-2">
-          Comprar equipo de seguridad de la empresa de JkSefetyEquipements.com
-          siempre y cuando el precio de compra sea por debajo de los $300 por
-          pieza
-        </p>
+        <p className="leading-7 [&:not(:first-child)]:mt-2">{description}</p>
         <Separator />
         <div className="space-y-3">
           <div>
             <p className="text-sm font-semibold">Problema</p>
-            <p className="text-sm">Muchos accidentes que alteran la calidad</p>
+            <p className="text-sm">{problem}</p>
           </div>
           <div>
             <p className="text-sm font-semibold">Causa</p>
-            <p className="text-sm">Maquinaria</p>
+            <p className="text-sm">{cause}</p>
           </div>
         </div>
         <div className="flex gap-4 w-full mt-2">
@@ -170,6 +181,29 @@ function TaskCard() {
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
+
+        <div className="flex">
+          <Button
+            onClick={() => {
+              setWillDelete(true);
+            }}
+            variant={"ghost"}
+            size={"icon"}
+          >
+            <Trash className="w-4 h-4" />
+          </Button>
+          <div className={cn(["flex gap-2", willDelete ? "" : "hidden"])}>
+            <Button
+              onClick={() => {
+                setWillDelete(false);
+              }}
+              variant={"secondary"}
+            >
+              Cancelar
+            </Button>
+            <Button variant={"destructive"}>Eliminar</Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -177,13 +211,15 @@ function TaskCard() {
 
 // TODO: Talvez deberian tener value y label (como en los select)
 const userOptions = [
+  "Todos",
   "Juan Peralez",
   "Jose Ramiro",
   "Elizabeth Campos",
   "Yeraldi Mecias",
 ];
-const areaOptions = ["Security", "Quality", "People"];
+const areaOptions = ["Todos", "Security", "Quality", "People"];
 const boardOptions = [
+  "Todos",
   "Xbox 360",
   "Tornos Flinter",
   "Llanta inflafle A4",
@@ -192,7 +228,39 @@ const boardOptions = [
 ];
 
 export default function TasksPage() {
-  // TODO: Falta el Sheet de cada tasks y que sea mas DRY
+  type Task = {
+    title: string;
+    tags: string[];
+    endDate: string;
+    assignedUser: string;
+    description: string;
+    problem: string;
+    cause: string;
+  };
+
+  const [todoTaskList, setTodoTaskList] = useState<Task[]>([
+    {
+      title: "A",
+      tags: ["Security", "Xbox"],
+      endDate: "20/12/2024",
+      assignedUser: "Jose Peralez",
+      description: "Eso",
+      problem: "Aquello",
+      cause: "Por eso",
+    },
+    {
+      title: "b",
+      tags: ["Security", "Xbox"],
+      endDate: "20/12/2024",
+      assignedUser: "Jose Peralez",
+      description: "Eso",
+      problem: "Aquello",
+      cause: "Por eso",
+    },
+  ]);
+  const [doingTaskList, setDoingTaskList] = useState<Task[]>([]);
+  const [doneTaskList, setDoneTaskList] = useState<Task[]>([]);
+
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
       <div className="flex flex-col justify-between gap-2 lg:flex-row ">
@@ -212,13 +280,26 @@ export default function TasksPage() {
               Por Hacer
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
+              {todoTaskList.length > 0 ? (
+                <>
+                  {todoTaskList.map((task) => (
+                    <TaskCard
+                      title={task.title}
+                      tags={task.tags}
+                      endDate={task.endDate}
+                      assignedUser={task.assignedUser}
+                      description={task.description}
+                      problem={task.problem}
+                      cause={task.cause}
+                    />
+                  ))}
+                  <Button variant={"ghost"}>Mostrar mas</Button>
+                </>
+              ) : (
+                <div className="text-center text-muted-foreground text-sm max-w-[30rem]">
+                  No hay acciones por el momento
+                </div>
+              )}
             </div>
           </CarouselItem>
           <CarouselItem className="lg:basis-1/3  pl-6">
@@ -226,13 +307,23 @@ export default function TasksPage() {
               En Progreso
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
+              {doingTaskList.length > 0 ? (
+                doingTaskList.map((task) => (
+                  <TaskCard
+                    title={task.title}
+                    tags={task.tags}
+                    endDate={task.endDate}
+                    assignedUser={task.assignedUser}
+                    description={task.description}
+                    problem={task.problem}
+                    cause={task.cause}
+                  />
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground text-sm">
+                  No hay acciones por el momento
+                </div>
+              )}
             </div>
           </CarouselItem>
           <CarouselItem className="lg:basis-1/3 pl-6">
@@ -240,13 +331,23 @@ export default function TasksPage() {
               Hecho
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
-              <TaskCard />
+              {doneTaskList.length > 0 ? (
+                doneTaskList.map((task) => (
+                  <TaskCard
+                    title={task.title}
+                    tags={task.tags}
+                    endDate={task.endDate}
+                    assignedUser={task.assignedUser}
+                    description={task.description}
+                    problem={task.problem}
+                    cause={task.cause}
+                  />
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground text-sm">
+                  No hay acciones por el momento
+                </div>
+              )}
             </div>
           </CarouselItem>
         </CarouselContent>
