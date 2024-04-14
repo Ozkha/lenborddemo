@@ -282,8 +282,9 @@ export default function TasksPage() {
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
               {todoTaskList.length > 0 ? (
                 <>
-                  {todoTaskList.map((task) => (
+                  {todoTaskList.map((task, index) => (
                     <TaskCard
+                      key={"task-todo-" + index}
                       title={task.title}
                       tags={task.tags}
                       endDate={task.endDate}
@@ -308,8 +309,9 @@ export default function TasksPage() {
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
               {doingTaskList.length > 0 ? (
-                doingTaskList.map((task) => (
+                doingTaskList.map((task, index) => (
                   <TaskCard
+                    key={"task-doing-" + index}
                     title={task.title}
                     tags={task.tags}
                     endDate={task.endDate}
@@ -332,8 +334,9 @@ export default function TasksPage() {
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
               {doneTaskList.length > 0 ? (
-                doneTaskList.map((task) => (
+                doneTaskList.map((task, index) => (
                   <TaskCard
+                    key={"task-done-" + index}
                     title={task.title}
                     tags={task.tags}
                     endDate={task.endDate}
