@@ -227,9 +227,9 @@ export default function BoardPage() {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex items-center">
-        <Select defaultValue="kasjd712a">
+        <Select>
           <SelectTrigger className="w-fit rounded-none border-0 bg-transparent scroll-m-20 text-2xl font-semibold tracking-tight">
-            <SelectValue placeholder="Tablero" />
+            <SelectValue placeholder="Selecciona Tablero" />
           </SelectTrigger>
           <SelectContent>
             {boardList.map((board, id) => (
