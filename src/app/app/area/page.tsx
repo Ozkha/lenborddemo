@@ -52,7 +52,7 @@ import {
   SquareCheck,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 // TODO: Toda la informacion de las cuasas, y los objetivos cumplidos del KPI no estaran
@@ -170,7 +170,7 @@ const data = [
   },
 ];
 
-export default function AreaPage() {
+function AreaPage() {
   const params = useSearchParams();
   const areaId = params.get("area");
 
@@ -574,5 +574,13 @@ export default function AreaPage() {
         </TabsContent>
       </Tabs>
     </main>
+  );
+}
+
+export default function AreaPageSuspended() {
+  return (
+    <Suspense>
+      <AreaPage></AreaPage>
+    </Suspense>
   );
 }

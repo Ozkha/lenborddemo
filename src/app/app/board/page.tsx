@@ -24,9 +24,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { BookUp, ListTodo, Plus } from "lucide-react";
+import { NextPage } from "next";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 const lugares = [
   {
@@ -98,7 +99,7 @@ type Area = {
   lasttaskupdate: string;
 };
 
-export default function BoardPage() {
+function BoardPage() {
   const params = useSearchParams();
   const boardId = params.get("board");
   //TODO Este boardId se utilizaar para ya seleccionar el tablero con base al navbar sin tener que
@@ -453,5 +454,13 @@ export default function BoardPage() {
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+export default function BooardPageSuspensed() {
+  return (
+    <Suspense>
+      <BoardPage></BoardPage>
+    </Suspense>
   );
 }
