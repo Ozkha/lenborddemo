@@ -66,15 +66,8 @@ export default function AppLayout({
                 Usuarios
               </Link>
               <Link
-                href="#"
-                className="flex items-center gap-4 pr-2.5 hover:text-foreground"
-              >
-                <Bolt className="h-5 w-5"></Bolt>
-                Ajustes
-              </Link>
-              <Link
                 href="/app/kpis"
-                className="text-muted-foreground flex items-center gap-4 pr-2.5 hover:text-foreground"
+                className=" flex items-center gap-4 pr-2.5 hover:text-foreground"
               >
                 <Gauge className="h-5 w-5"></Gauge>
                 KPI{"'"}s
@@ -85,7 +78,7 @@ export default function AppLayout({
               {boardsList.map((boardDetails) => (
                 <Link
                   key={"board-" + boardDetails.id}
-                  href={"/app/board/" + boardDetails.id}
+                  href={"/app/board?board=" + boardDetails.id}
                   className="text-muted-foreground"
                 >
                   {boardDetails.name}
