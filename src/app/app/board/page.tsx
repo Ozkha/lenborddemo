@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { BookUp, ListTodo, Plus } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const lugares = [
@@ -98,6 +99,11 @@ type Area = {
 };
 
 export default function BoardPage() {
+  const params = useSearchParams();
+  const boardId = params.get("board");
+  //TODO Este boardId se utilizaar para ya seleccionar el tablero con base al navbar sin tener que
+  // seleccionarlo en el select.
+
   const [boardList, setBoardList] = useState([
     { label: "Flexometro Linter", value: "asjdh1j23asd" },
     { label: "Tornos Acero", value: "asdjkh123asd" },
