@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -30,23 +29,21 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { addDays } from "date-fns";
 import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
-import { useParams } from "next/navigation";
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+
+// TODO: Toda la informacion de las cuasas, y los objetivos cumplidos del KPI no estaran
+// en estados, sino que seran fetcheados o pedidos directamente del servidor cuadno se entree.
+// Y cuando se cambie, se re-hara la UI
 
 const dataMonthly = [
   { color: "bg-[#f43f5e]", tooltip: "Enero" },
@@ -160,13 +157,28 @@ const data = [
 ];
 
 export default function AreaPage() {
-  const params = useParams();
-  // TODO: OPCION: Cambiar Nombre del area
-  // TODO: OPCION: Eliminar esta area
-  // TODO: OPCION: Seleccionar KPI de esta area
-  // TODO: ???Talvez seleccionar el rango temporal de la info que se quiere ver
-  // TODO: Poder ver todo el historial de info dumps.
-  // TODO: ???Un dashboard rapido o stats de lo que se ingreso en los info dumps.
+  const params = useSearchParams();
+  const areaId = params.get("area");
+
+  const [date, setDate] = useState({
+    from: new Date(2022, 0, 20),
+    to: addDays(new Date(2022, 0, 20), 20),
+  });
+
+  const [w5Page, setW5Page] = useState(1);
+
+  if (areaId == null) {
+    return (
+      <main className="p-4 sm:px-6 sm:py-0">
+        <div className="w-full">
+          <p className="text-center text-xl mt-8">
+            Es necesario haber seleccionada el area de algun tablero al entrar
+            aqui
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="p-4 sm:px-6 sm:py-0">
@@ -188,14 +200,18 @@ export default function AreaPage() {
           </TabsList>
         </div>
         <TabsContent value="dashboard">
-          <DatePickerRange className="w-full md:w-fit my-4" />
+          <DatePickerRange
+            className="w-full md:w-fit my-4"
+            from={date.from}
+            to={date.to}
+          />
           <div className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
                 <Card className="sm:col-span-2">
                   <CardHeader className="pb-3">
                     <CardDescription>
-                      Ene 20, 2022 - Feb 09. 2022 {"20 dias"}
+                      Ene 20, 2022 - Feb 09. 2022 {"( 20 dias )"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -271,9 +287,9 @@ export default function AreaPage() {
                     </ul>
                     <Dialog>
                       <DialogTrigger className="w-full">
-                        <Button className="w-full mt-2" variant={"ghost"}>
+                        <div className="mt-4 text-sm font-medium">
                           Mostrar Mas
-                        </Button>
+                        </div>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
@@ -330,7 +346,7 @@ export default function AreaPage() {
                     </CardDescription>
                   </div>
                   <div className="ml-auto flex items-center gap-1">
-                    <p className="mr-4 text-sm">2 / 4</p>
+                    <p className="mr-4 text-sm">{w5Page} / 4</p>
                     <Pagination className="ml-auto mr-0 w-auto">
                       <PaginationContent>
                         <PaginationItem>
@@ -338,6 +354,9 @@ export default function AreaPage() {
                             size="icon"
                             variant="outline"
                             className="h-6 w-6"
+                            onClick={() => {
+                              setW5Page(w5Page - 1);
+                            }}
                           >
                             <ChevronLeft className="h-3.5 w-3.5" />
                             <span className="sr-only">Previous Order</span>
@@ -348,6 +367,9 @@ export default function AreaPage() {
                             size="icon"
                             variant="outline"
                             className="h-6 w-6"
+                            onClick={() => {
+                              setW5Page(w5Page + 1);
+                            }}
                           >
                             <ChevronRight className="h-3.5 w-3.5" />
                             <span className="sr-only">Next Order</span>
@@ -398,7 +420,7 @@ export default function AreaPage() {
           <div className="w-full flex justify-center">
             <Card className="w-full max-w-[45rem]">
               <CardHeader>
-                <CardTitle>Ajsutes</CardTitle>
+                <CardTitle>Ajustes</CardTitle>
               </CardHeader>
               <CardContent>
                 <Label htmlFor="areaname">Nombre</Label>
