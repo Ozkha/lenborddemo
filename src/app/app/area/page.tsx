@@ -4,6 +4,7 @@ import { DatePickerRange } from "@/components/ui-compounded/daterangepicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -27,6 +28,11 @@ import {
   PaginationItem,
 } from "@/components/ui/pagination";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,8 +41,16 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { addDays } from "date-fns";
-import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { addDays, format } from "date-fns";
+import {
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  SquareCheck,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
@@ -165,6 +179,8 @@ export default function AreaPage() {
     to: addDays(new Date(2022, 0, 20), 20),
   });
 
+  const [dateA, setDateA] = useState<Date>();
+
   const [w5Page, setW5Page] = useState(1);
 
   if (areaId == null) {
@@ -237,7 +253,110 @@ export default function AreaPage() {
               </div>
               <Card>
                 <CardHeader className="px-7">
-                  <CardTitle>Causas</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <p>Causas</p>
+                    <Dialog>
+                      <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <SquareCheck className="w-4 h-4 mr-1" />
+                        Asignar Accion
+                      </DialogTrigger>
+                      <DialogContent>
+                        <div className="w-full flex gap-1">
+                          <Badge>Security</Badge>
+                          <Badge>Flexometro Linter</Badge>
+                        </div>
+                        <Input
+                          className="text-lg border-0 border-b"
+                          placeholder="Titulo"
+                        />
+                        <div className="flex justify-start">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"ghost"}
+                                className={cn(
+                                  "max-w-[280px] justify-start text-left font-normal",
+                                  !date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {dateA ? (
+                                  format(dateA, "PPP")
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">
+                                    Sin fecha limite
+                                  </span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={dateA}
+                                onSelect={setDateA}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Separator orientation="vertical" />
+                          <div className="flex items-center">
+                            <p className="text-xs text-gray-500 ml-2">👤</p>
+                            <Select>
+                              <SelectTrigger className="max-w-[180px] border-0">
+                                <SelectValue placeholder="Responsable" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="joseperalez">
+                                  Jose Peralez
+                                </SelectItem>
+                                <SelectItem value="yeraldi macias">
+                                  Yeraldi Macias
+                                </SelectItem>
+                                <SelectItem value="Montoya Hector">
+                                  Montoya Hector
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <Label htmlFor="description">Descripcion</Label>
+                        <Textarea id="description" placeholder="..."></Textarea>
+                        <Separator />
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor="problemainput">Problema</Label>
+                            <Input id="problemainput"></Input>
+                          </div>
+                          <div>
+                            <Label htmlFor="causaselect">Causa</Label>
+                            <Select>
+                              <SelectTrigger
+                                id="causaselect"
+                                className="w-full"
+                              >
+                                <SelectValue placeholder="Selecciona la Causa" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="light">
+                                  Mano Derecha
+                                </SelectItem>
+                                <SelectItem value="dark">
+                                  Mano Derecha
+                                </SelectItem>
+                                <SelectItem value="system">
+                                  Mano Derecha
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <Button disabled className="mt-4">
+                          Asignar
+                        </Button>
+                      </DialogContent>
+                    </Dialog>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col md:flex-row md:gap-4">
                   <ResponsiveContainer
