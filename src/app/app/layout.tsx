@@ -52,7 +52,7 @@ export default function AppLayout({
                 <span className="sr-only">Acme Inc</span>
               </Link>
               <Link
-                href="#"
+                href="/app/tasks"
                 className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
               >
                 <ListTodo className="h-5 w-5"></ListTodo>
