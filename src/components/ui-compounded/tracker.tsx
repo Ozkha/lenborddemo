@@ -20,8 +20,8 @@ export function Tracker({ data, className }: TrackerProps) {
   return (
     <div className={cn(["h-10 flex items-center space-x-0.5", className])}>
       <TooltipProvider>
-        {data.map((val) => (
-          <Tooltip>
+        {data.map((val, index) => (
+          <Tooltip key={"tracker-" + index}>
             <TooltipTrigger asChild>
               <div
                 className={cn([
