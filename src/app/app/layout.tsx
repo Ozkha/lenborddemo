@@ -59,7 +59,7 @@ export default function AppLayout({
                 Acciones
               </Link>
               <Link
-                href="#"
+                href="/app/users"
                 className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
               >
                 <Users className="h-5 w-5"></Users>
