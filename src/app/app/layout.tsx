@@ -15,7 +15,6 @@ import {
   CircleUser,
   Gauge,
   ListTodo,
-  Menu,
   Package2,
   PanelLeftOpen,
   Plus,
@@ -53,32 +52,25 @@ export default function AppLayout({
                 <span className="sr-only">Acme Inc</span>
               </Link>
               <Link
-                href="#"
+                href="/app/tasks"
                 className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
               >
                 <ListTodo className="h-5 w-5"></ListTodo>
                 Acciones
               </Link>
               <Link
-                href="#"
+                href="/app/users"
                 className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
               >
                 <Users className="h-5 w-5"></Users>
                 Usuarios
               </Link>
               <Link
-                href="#"
-                className="flex items-center gap-4 pr-2.5 hover:text-foreground"
-              >
-                <Bolt className="h-5 w-5"></Bolt>
-                Ajustes
-              </Link>
-              <Link
                 href="/app/kpis"
-                className="text-muted-foreground flex items-center gap-4 pr-2.5 hover:text-foreground"
+                className=" flex items-center gap-4 pr-2.5 hover:text-foreground"
               >
                 <Gauge className="h-5 w-5"></Gauge>
-                KPI's
+                KPI{"'"}s
               </Link>
               <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
                 Tableros
@@ -86,7 +78,7 @@ export default function AppLayout({
               {boardsList.map((boardDetails) => (
                 <Link
                   key={"board-" + boardDetails.id}
-                  href={"/app/board/" + boardDetails.id}
+                  href={"/app/board?board=" + boardDetails.id}
                   className="text-muted-foreground"
                 >
                   {boardDetails.name}

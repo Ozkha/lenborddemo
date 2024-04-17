@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,13 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -54,55 +46,88 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MinusCircle, Pencil, RotateCcw } from "lucide-react";
 import { useState } from "react";
 
-type KpiGoalBarProps = {
-  data?: {
+type CategoryBarProps = {
+  data: {
     label: string;
     color: string;
   }[];
   className?: string;
-  inverse?: boolean;
-  hasMiddle?: boolean;
 };
-function KpiGoalBar({ className, inverse, hasMiddle = true }: KpiGoalBarProps) {
+function CategoryBar({ data, className }: CategoryBarProps) {
   return (
-    <div className={cn(["flex flex-row w-full h-3", className])}>
-      <div
-        className={cn([
-          "h-full w-full rounded-l-md",
-          inverse ? "bg-emerald-400" : "bg-red-500",
-        ])}
-      />
-      {hasMiddle ? <div className="h-full w-full bg-amber-400" /> : undefined}
-      <div
-        className={cn([
-          "h-full w-full rounded-r-md",
-          inverse ? "bg-red-500" : "bg-emerald-400",
-        ])}
-      />
+    <div className={cn(["w-full", className])}>
+      <div className="w-full flex justify-around mb-1">
+        {data.map((val, i) => (
+          <p key={"label-" + val.color} className="text-xs">
+            {val.label}
+          </p>
+        ))}
+      </div>
+      <div className="flex flex-row h-3">
+        {data.map((val) => (
+          <div
+            key={val.color}
+            className={cn([
+              "h-full w-full first:rounded-l-md last:rounded-r-md",
+              val.color,
+            ])}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
+type Kpi = {
+  name: string;
+  metric: string;
+  fields: string[];
+  goal: { label: string; color: string; mean: string | undefined }[];
+};
 export default function KpisPage() {
-  const [isInverted, setIsInverted] = useState(false);
-  const [isItHasMiddle, setIsItHasMiddle] = useState(true);
+  const [currentGoal, setCurrentGoal] =
+    useState<{ label: string; color: string; mean: string | undefined }[]>();
+
+  const [kpisList, setKpisList] = useState<Kpi[]>([
+    {
+      name: "Utilidad marginal",
+      metric: "(ingresos / ganancias)*100",
+      fields: ["ingresos", "ganancias"],
+      goal: [
+        { label: "<=7", color: "bg-emerald-400", mean: "objetivo" },
+        { label: "<=9", color: "bg-amber-400", mean: undefined },
+        { label: ">=7", color: "bg-red-500", mean: "fallo" },
+      ],
+    },
+    {
+      name: "Accidentes",
+      metric: "accidentes",
+      fields: ["accidentes"],
+      goal: [
+        { label: "<=2", color: "bg-emerald-400", mean: "objetivo" },
+        { label: "<=3", color: "bg-amber-400", mean: undefined },
+        { label: ">3", color: "bg-red-500", mean: "fallo" },
+      ],
+    },
+  ]);
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <Card x-chunk="dashboard-06-chunk-0">
         <CardHeader>
-          <CardTitle>KPI's</CardTitle>
+          <CardTitle>KPI{"'"}s</CardTitle>
           <CardDescription>Necesarios para crear tableros</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="w-full flex justify-end">
             <Dialog>
-              {/* TODO: Estoy AQUI */}
               <DialogTrigger>
-                <Button>Nuevo KPI</Button>
+                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                  Nuevo KPI
+                </div>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -137,107 +162,81 @@ export default function KpisPage() {
                       <li>Horas trabajadas</li>
                     </ul>
                   </div>
-                  <p className="text-sm font-semibold mb-2">Meta</p>
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}5</p>
-                      </div>
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Meta</p>
+                    <div className="w-full flex justify-around  mb-3">
+                      <p className="w-full text-sm font-medium text-center">
+                        Objetivo
+                      </p>
+                      <div className="w-full" />
+                      <p className="w-full text-sm font-medium text-center">
+                        Fallo
+                      </p>
                     </div>
-                    <div
-                      className={cn([
-                        "w-full",
-                        isItHasMiddle ? undefined : "hidden",
-                      ])}
-                    >
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}7</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}7</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar inverse={isInverted} hasMiddle={isItHasMiddle} />
-                  <div className="w-full flex gap-1 mt-2">
-                    <div className="w-full flex justify-center gap-1">
-                      <Select>
-                        <SelectTrigger defaultValue={"minusorequalsthan"}>
-                          <SelectValue placeholder="<" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="minusthan">{"<"}</SelectItem>
-                          <SelectItem value="minusorequalsthan">
-                            {"<="}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input type="number" value={5} />
-                    </div>
-                    <div
-                      className={cn([
-                        "w-full flex justify-center gap-1",
-                        isItHasMiddle ? undefined : "hidden",
-                      ])}
-                    >
-                      <Select>
-                        <SelectTrigger defaultValue={"minusorequalsthan"}>
-                          <SelectValue placeholder="<" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="minusthan">{"<"}</SelectItem>
-                          <SelectItem value="minusorequalsthan">
-                            {"<="}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input type="number" value={7} />
-                    </div>
-                    <div className="w-full flex justify-center gap-1">
-                      <Select>
-                        <SelectTrigger defaultValue={"gratherthan"}>
-                          <SelectValue placeholder=">" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gratherthan">{">"}</SelectItem>
-                          <SelectItem value="gratherorequalsthan">
-                            {">="}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input type="number" value={7} />
-                    </div>
-                  </div>
-                  <div className="flex items-center mt-4">
-                    <Switch
-                      onCheckedChange={(val) => {
-                        setIsInverted(val);
-                      }}
-                      checked={isInverted}
-                      id="inverted"
+                    <CategoryBar
+                      data={[
+                        { label: "<=7", color: "bg-emerald-400" },
+                        { label: "<=9", color: "bg-amber-400" },
+                        { label: ">=7", color: "bg-red-500" },
+                      ]}
                     />
-                    <Label htmlFor="inverted" className="ml-2">
-                      Invertido
-                    </Label>
+                    <div className="w-full flex gap-1 mt-1">
+                      <div className="w-full flex justify-center gap-1">
+                        <Select>
+                          <SelectTrigger defaultValue={"minusorequalsthan"}>
+                            <SelectValue placeholder="<" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="minusthan">{"<"}</SelectItem>
+                            <SelectItem value="minusorequalsthan">
+                              {"<="}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input type="number" value={5} />
+                      </div>
+                      <div className="w-full flex justify-center gap-1">
+                        <Select>
+                          <SelectTrigger defaultValue={"minusorequalsthan"}>
+                            <SelectValue placeholder="<" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="minusthan">{"<"}</SelectItem>
+                            <SelectItem value="minusorequalsthan">
+                              {"<="}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input type="number" value={7} />
+                      </div>
+                      <div className="w-full flex justify-center gap-1">
+                        <Select>
+                          <SelectTrigger defaultValue={"gratherthan"}>
+                            <SelectValue placeholder=">" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gratherthan">{">"}</SelectItem>
+                            <SelectItem value="gratherorequalsthan">
+                              {">="}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input type="number" value={7} />
+                      </div>
+                    </div>
+                    <div className="flex flex-row flex-nowrap gap-2 mt-3">
+                      <Button className="w-full" variant={"outline"}>
+                        <RotateCcw className="w-4 h-5 mr-1" />
+                        Invertir
+                      </Button>
+                      <Button className="w-full" variant={"outline"}>
+                        <MinusCircle className="w-4 h-5 mr-1" />
+                        Eliminar Parcial
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center mt-2">
-                    <Switch
-                      onCheckedChange={(val) => {
-                        setIsItHasMiddle(val);
-                      }}
-                      checked={isItHasMiddle}
-                      id="hasmiddle"
-                    />
-                    <Label htmlFor="hasmiddle" className="ml-2">
-                      Valor intermedio
-                    </Label>
-                  </div>
+                  <Button className="w-full mt-6">Agregar KPI</Button>
                 </div>
-                <Button className="mt-6" disabled>
-                  Crear KPI
-                </Button>
               </DialogContent>
             </Dialog>
           </div>
@@ -255,330 +254,135 @@ export default function KpisPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">Utilidad marginal</TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif ">
-                  (ingresos / ganancias)*100
-                </TableCell>
-                <TableCell className="hidden lg:table-cell min-w-28">
-                  {/* TODO: Tambien pensar si esto de los numeros de mayor que deberian de ir dentro del componente */}
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}5</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}7</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}7</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar data={[{ label: "<=5", color: "bg-" }]} />
-                </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger>
-                      <Button variant={"ghost"} size={"icon"}>
+              {kpisList.map((kpi) => (
+                <TableRow key={"kpi-" + kpi.name}>
+                  <TableCell className="font-medium">{kpi.name}</TableCell>
+                  <TableCell className="hidden md:table-cell italic font-serif">
+                    {kpi.metric}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell min-w-28">
+                    <CategoryBar data={kpi.goal} />
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger
+                        onClick={() => {
+                          setCurrentGoal(kpi.goal);
+                        }}
+                        className="h-full flex items-center"
+                      >
                         <Pencil className="w-4 h-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Utilidad Marginal</DialogTitle>
-                      </DialogHeader>
-                      <div>
-                        <p className="text-sm font-semibold mb-2">Meta</p>
-                        <div className="w-full flex gap-1 text-xs mb-1">
-                          <div className="w-full">
-                            <div className="w-full flex justify-center">
-                              <p>{"<="}5</p>
-                            </div>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>{kpi.name}</DialogTitle>
+                        </DialogHeader>
+                        <div>
+                          <p className="text-sm font-semibold mb-2">Meta</p>
+                          <div className="w-full flex justify-around  mb-3">
+                            <p className="w-full text-sm font-medium text-center">
+                              Objetivo
+                            </p>
+                            <div className="w-full" />
+                            <p className="w-full text-sm font-medium text-center">
+                              Fallo
+                            </p>
                           </div>
-                          <div
-                            className={cn([
-                              "w-full",
-                              isItHasMiddle ? undefined : "hidden",
-                            ])}
-                          >
-                            <div className="w-full flex justify-center">
-                              <p>{"<="}7</p>
-                            </div>
-                          </div>
-                          <div className="w-full">
-                            <div className="w-full flex justify-center">
-                              <p>{">"}7</p>
-                            </div>
-                          </div>
-                        </div>
-                        <KpiGoalBar
-                          inverse={isInverted}
-                          hasMiddle={isItHasMiddle}
-                        />
-                        <div className="w-full flex gap-1 mt-2">
-                          <div className="w-full flex justify-center gap-1">
-                            <Select>
-                              <SelectTrigger defaultValue={"minusorequalsthan"}>
-                                <SelectValue placeholder="<" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="minusthan">{"<"}</SelectItem>
-                                <SelectItem value="minusorequalsthan">
-                                  {"<="}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input type="number" value={5} />
-                          </div>
-                          <div
-                            className={cn([
-                              "w-full flex justify-center gap-1",
-                              isItHasMiddle ? undefined : "hidden",
-                            ])}
-                          >
-                            <Select>
-                              <SelectTrigger defaultValue={"minusorequalsthan"}>
-                                <SelectValue placeholder="<" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="minusthan">{"<"}</SelectItem>
-                                <SelectItem value="minusorequalsthan">
-                                  {"<="}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input type="number" value={7} />
-                          </div>
-                          <div className="w-full flex justify-center gap-1">
-                            <Select>
-                              <SelectTrigger defaultValue={"gratherthan"}>
-                                <SelectValue placeholder=">" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="gratherthan">
-                                  {">"}
-                                </SelectItem>
-                                <SelectItem value="gratherorequalsthan">
-                                  {">="}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input type="number" value={7} />
-                          </div>
-                        </div>
-                        <div className="flex items-center mt-4">
-                          <Switch
-                            onCheckedChange={(val) => {
-                              setIsInverted(val);
-                            }}
-                            checked={isInverted}
-                            id="inverted"
+                          <CategoryBar
+                            data={currentGoal ? currentGoal : kpi.goal}
                           />
-                          <Label htmlFor="inverted" className="ml-2">
-                            Invertido
-                          </Label>
+                          <div className="w-full flex gap-1 mt-1">
+                            <div className="w-full flex justify-center gap-1">
+                              <Select>
+                                <SelectTrigger
+                                  defaultValue={"minusorequalsthan"}
+                                >
+                                  <SelectValue placeholder="<" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="minusthan">
+                                    {"<"}
+                                  </SelectItem>
+                                  <SelectItem value="minusorequalsthan">
+                                    {"<="}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input type="number" value={5} />
+                            </div>
+                            <div className="w-full flex justify-center gap-1">
+                              <Select>
+                                <SelectTrigger
+                                  defaultValue={"minusorequalsthan"}
+                                >
+                                  <SelectValue placeholder="<" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="minusthan">
+                                    {"<"}
+                                  </SelectItem>
+                                  <SelectItem value="minusorequalsthan">
+                                    {"<="}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input type="number" value={7} />
+                            </div>
+                            <div className="w-full flex justify-center gap-1">
+                              <Select>
+                                <SelectTrigger defaultValue={"gratherthan"}>
+                                  <SelectValue placeholder=">" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="gratherthan">
+                                    {">"}
+                                  </SelectItem>
+                                  <SelectItem value="gratherorequalsthan">
+                                    {">="}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input type="number" value={7} />
+                            </div>
+                          </div>
+                          <div className="flex flex-row flex-nowrap gap-2 mt-3">
+                            <Button className="w-full" variant={"outline"}>
+                              <RotateCcw className="w-4 h-5 mr-1" />
+                              Invertir
+                            </Button>
+                            <Button className="w-full" variant={"outline"}>
+                              <MinusCircle className="w-4 h-5 mr-1" />
+                              Eliminar Parcial
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center mt-2">
-                          <Switch
-                            onCheckedChange={(val) => {
-                              setIsItHasMiddle(val);
-                            }}
-                            checked={isItHasMiddle}
-                            id="hasmiddle"
-                          />
-                          <Label htmlFor="hasmiddle" className="ml-2">
-                            Valor intermedio
-                          </Label>
+
+                        <Separator className="my-2" />
+                        <div>
+                          <p className="text-sm font-semibold mb-2">Metrica</p>
+                          <p className="italic font-serif mt-1">{kpi.metric}</p>
                         </div>
-                      </div>
-                      <Separator className="my-2" />
-                      <div>
-                        <p className="text-sm font-semibold mb-2">Metrica</p>
-                        <p className="italic font-serif mt-1">
-                          (ingresos / ganancias) * 100
-                        </p>
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-sm font-semibold">Campos</p>
-                        <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
-                          <li>ingresos</li>
-                          <li>ganancias</li>
-                        </ul>
-                      </div>
-                      <Button className="mt-6" disabled>
-                        Guardar Cambios
-                      </Button>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Accidentes</TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif">
-                  Accidentes
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<"}1</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<"}2</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}2</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar inverse />
-                </TableCell>
-                <TableCell>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Entregas a tiempo</TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif">
-                  (entregas a tiempo / total entregas) * 100
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}90</p>
-                      </div>
-                    </div>
-
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}90</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar hasMiddle={false} />
-                </TableCell>
-
-                <TableCell>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  Defectos por producto
-                </TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif">
-                  defectos
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}3</p>
-                      </div>
-                    </div>
-
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}3</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar inverse hasMiddle={false} />
-                </TableCell>
-
-                <TableCell>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Accidentes</TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif">
-                  ingresos / ganancias
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}5</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}7</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}7</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar />
-                </TableCell>
-
-                <TableCell>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  Luminous VR Headset
-                </TableCell>
-                <TableCell className="hidden md:table-cell italic font-serif">
-                  ingresos / ganancias
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <div className="w-full flex gap-1 text-xs mb-1">
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}5</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{"<="}7</p>
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="w-full flex justify-center">
-                        <p>{">"}7</p>
-                      </div>
-                    </div>
-                  </div>
-                  <KpiGoalBar />
-                </TableCell>
-
-                <TableCell>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                        <div className="mt-4">
+                          <p className="text-sm font-semibold">Campos</p>
+                          <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
+                            {kpi.fields.map((field) => (
+                              <li key={"li-" + field}>{field}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <Button className="mt-6">Guardar Cambios</Button>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
         <CardFooter>
           <div className="w-full">
             <div className="text-xs text-muted-foreground">
-              Se muestran <strong>1-10</strong> de <strong>32</strong> KPI's
+              Se muestran <strong>1-10</strong> de <strong>32</strong> KPI{"'"}s
             </div>
             <Pagination className="w-full mt-4">
               <PaginationContent>

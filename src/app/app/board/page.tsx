@@ -2,16 +2,14 @@
 
 import DonughtProgress from "@/components/charts/donughtprogress";
 import { Combobox } from "@/components/ui-compounded/combobox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,10 +23,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { BookUp, Ghost, ListTodo, Plus } from "lucide-react";
+import { BookUp, ListTodo, Plus } from "lucide-react";
+import { NextPage } from "next";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 const lugares = [
   {
@@ -89,19 +88,71 @@ const causas = [
   },
 ];
 
-export default function BoardPage() {
-  const params = useParams();
+type Area = {
+  title: string;
+  data: {
+    label: string;
+    state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+  }[];
+  kpiname: string;
+  mainCauses: { label: string; weight: number }[];
+  lasttaskupdate: string;
+};
 
-  const [areaList, setAreaList] = useState([
+function BoardPage() {
+  const params = useSearchParams();
+  const boardId = params.get("board");
+  //TODO Este boardId se utilizaar para ya seleccionar el tablero con base al navbar sin tener que
+  // seleccionarlo en el select.
+
+  const [boardList, setBoardList] = useState([
+    { label: "Flexometro Linter", value: "asjdh1j23asd" },
+    { label: "Tornos Acero", value: "asdjkh123asd" },
+  ]);
+
+  const [areaList, setAreaList] = useState<Area[]>([
     {
       title: "Security",
-      kpiname: "Menos de 3 accidentes",
-      influentialcauses: [
-        { cause: "Mano derecha", weight: 24 },
-        { cause: "Mano izquierda", weight: 13 },
-        { cause: "Rodilla", weight: 8 },
+      data: [
+        { label: "Dia 1", state: "fail" },
+        { label: "Dia 2", state: "success" },
+        { label: "Dia 3", state: "midpoint" },
+        { label: "Dia 4", state: "disabled" },
+        { label: "Dia 5", state: "success" },
+        { label: "Dia 6", state: "fail" },
+        { label: "Dia 7", state: "fail" },
+        { label: "Dia 8", state: "empty" },
+        { label: "Dia 9", state: "empty" },
+        { label: "Dia 10", state: "empty" },
+        { label: "Dia 11", state: "empty" },
+        { label: "Dia 12", state: "empty" },
+        { label: "Dia 13", state: "empty" },
+        { label: "Dia 14", state: "empty" },
+        { label: "Dia 15", state: "empty" },
+        { label: "Dia 16", state: "empty" },
+        { label: "Dia 17", state: "empty" },
+        { label: "Dia 18", state: "empty" },
+        { label: "Dia 19", state: "empty" },
+        { label: "Dia 20", state: "empty" },
+        { label: "Dia 21", state: "empty" },
+        { label: "Dia 22", state: "empty" },
+        { label: "Dia 23", state: "empty" },
+        { label: "Dia 24", state: "empty" },
+        { label: "Dia 25", state: "empty" },
+        { label: "Dia 26", state: "empty" },
+        { label: "Dia 27", state: "empty" },
+        { label: "Dia 28", state: "empty" },
+        { label: "Dia 29", state: "empty" },
+        { label: "Dia 30", state: "empty" },
+        { label: "Dia 31", state: "empty" },
       ],
-      lasttaskupdate: "", //Hacerlo Date
+      kpiname: "Menos de 3 accidentes",
+      mainCauses: [
+        { label: "Mano derecha", weight: 24 },
+        { label: "Mano izquierda", weight: 13 },
+        { label: "Rodilla", weight: 8 },
+      ],
+      lasttaskupdate: "10 mins", //TODO: Hacerlo Date Talvez
     },
   ]);
 
@@ -130,8 +181,41 @@ export default function BoardPage() {
       ...areaList,
       {
         title: "sin nombre",
-        kpiname: "...",
-        influentialcauses: [],
+        data: [
+          { label: "Dia 1", state: "empty" },
+          { label: "Dia 2", state: "empty" },
+          { label: "Dia 3", state: "empty" },
+          { label: "Dia 4", state: "empty" },
+          { label: "Dia 5", state: "empty" },
+          { label: "Dia 6", state: "empty" },
+          { label: "Dia 7", state: "empty" },
+          { label: "Dia 8", state: "empty" },
+          { label: "Dia 9", state: "empty" },
+          { label: "Dia 10", state: "empty" },
+          { label: "Dia 11", state: "empty" },
+          { label: "Dia 12", state: "empty" },
+          { label: "Dia 13", state: "empty" },
+          { label: "Dia 14", state: "empty" },
+          { label: "Dia 15", state: "empty" },
+          { label: "Dia 16", state: "empty" },
+          { label: "Dia 17", state: "empty" },
+          { label: "Dia 18", state: "empty" },
+          { label: "Dia 19", state: "empty" },
+          { label: "Dia 20", state: "empty" },
+          { label: "Dia 21", state: "empty" },
+          { label: "Dia 22", state: "empty" },
+          { label: "Dia 23", state: "empty" },
+          { label: "Dia 24", state: "empty" },
+          { label: "Dia 25", state: "empty" },
+          { label: "Dia 26", state: "empty" },
+          { label: "Dia 27", state: "empty" },
+          { label: "Dia 28", state: "empty" },
+          { label: "Dia 29", state: "empty" },
+          { label: "Dia 30", state: "empty" },
+          { label: "Dia 31", state: "empty" },
+        ],
+        kpiname: "Sin KPI",
+        mainCauses: [],
         lasttaskupdate: "",
       },
     ]);
@@ -149,10 +233,19 @@ export default function BoardPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-      <div className="flex items-baseline">
-        <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-          Flexometro linter
-        </h3>
+      <div className="flex items-center">
+        <Select>
+          <SelectTrigger className="w-fit rounded-none border-0 bg-transparent scroll-m-20 text-2xl font-semibold tracking-tight">
+            <SelectValue placeholder="Selecciona Tablero" />
+          </SelectTrigger>
+          <SelectContent>
+            {boardList.map((board, id) => (
+              <SelectItem key={"board-" + board.value} value={board.value}>
+                {board.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select defaultValue="abril">
           <SelectTrigger className="w-fit rounded-none border-0 bg-transparent text-base text-muted-foreground">
             <SelectValue placeholder="Mes" />
@@ -163,6 +256,13 @@ export default function BoardPage() {
             <SelectItem value="marzo">Marzo</SelectItem>
             <SelectItem value="abril">Abril</SelectItem>
             <SelectItem value="mayo">Mayo</SelectItem>
+            <SelectItem value="junio">Junio</SelectItem>
+            <SelectItem value="julio">Julio</SelectItem>
+            <SelectItem value="agosto">Agosto</SelectItem>
+            <SelectItem value="septiembre">Septiembre</SelectItem>
+            <SelectItem value="octubre">Octubre</SelectItem>
+            <SelectItem value="noviembre">Noviembre</SelectItem>
+            <SelectItem value="diciembre">Diciembre</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -170,7 +270,7 @@ export default function BoardPage() {
         {areaList.map((area) => (
           <Card key={"area-" + area.title}>
             <CardHeader className="pb-0">
-              <Link href={"/app/area/eso123"}>
+              <Link href={"/app/area?area='eso123'"}>
                 <Button className="w-fit p-0" variant={"ghost"}>
                   <BookUp className="w-5 h-5 text-muted-foreground" />
                 </Button>
@@ -178,6 +278,7 @@ export default function BoardPage() {
             </CardHeader>
             <CardContent>
               <DonughtProgress
+                data={area.data}
                 onClickCell={(index) => {
                   setIdexModal(index);
                   setModalIsOpen(true);
@@ -185,21 +286,21 @@ export default function BoardPage() {
                 title={area.title}
               />
               <p className="text-center mt-2 text-muted-foreground">
-                KPI: {area.kpiname}
+                {area.kpiname}
               </p>
               <div className="flex flex-row justify-around gap-4 md:gap-10 xl:gap-12 my-6 ">
-                {area.influentialcauses.map((cause) => (
+                {area.mainCauses.map((cause) => (
                   <div
-                    key={"cause-" + cause.cause}
+                    key={"cause-" + cause.label}
                     className="flex flex-col items-center justify-end "
                   >
                     <p className={setTextSizeByCauseWeight(cause.weight)}>
                       {cause.weight}%
                     </p>
-                    <p className="text-xs text-center">{cause.cause}</p>
+                    <p className="text-xs text-center">{cause.label}</p>
                   </div>
                 ))}
-                {area.influentialcauses.length == 0 ? (
+                {area.mainCauses.length == 0 ? (
                   <div className="my-3">Sin Causas</div>
                 ) : (
                   <></>
@@ -210,7 +311,7 @@ export default function BoardPage() {
                 <AlertTitle className="flex flex-row justify-between align-bottom items-baseline">
                   Ultima tarea completada
                   <span className="text-xs text-muted-foreground">
-                    Hace 10 minutos
+                    {area.lasttaskupdate}
                   </span>
                 </AlertTitle>
               </Alert>
@@ -353,5 +454,13 @@ export default function BoardPage() {
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+export default function BooardPageSuspensed() {
+  return (
+    <Suspense>
+      <BoardPage></BoardPage>
+    </Suspense>
   );
 }

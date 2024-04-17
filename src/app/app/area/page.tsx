@@ -4,11 +4,11 @@ import { DatePickerRange } from "@/components/ui-compounded/daterangepicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -28,25 +28,36 @@ import {
   PaginationItem,
 } from "@/components/ui/pagination";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
-import { useParams } from "next/navigation";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { addDays, format } from "date-fns";
 import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  SquareCheck,
+} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+
+// TODO: Toda la informacion de las cuasas, y los objetivos cumplidos del KPI no estaran
+// en estados, sino que seran fetcheados o pedidos directamente del servidor cuadno se entree.
+// Y cuando se cambie, se re-hara la UI
 
 const dataMonthly = [
   { color: "bg-[#f43f5e]", tooltip: "Enero" },
@@ -159,14 +170,31 @@ const data = [
   },
 ];
 
-export default function AreaPage() {
-  const params = useParams();
-  // TODO: OPCION: Cambiar Nombre del area
-  // TODO: OPCION: Eliminar esta area
-  // TODO: OPCION: Seleccionar KPI de esta area
-  // TODO: ???Talvez seleccionar el rango temporal de la info que se quiere ver
-  // TODO: Poder ver todo el historial de info dumps.
-  // TODO: ???Un dashboard rapido o stats de lo que se ingreso en los info dumps.
+function AreaPage() {
+  const params = useSearchParams();
+  const areaId = params.get("area");
+
+  const [date, setDate] = useState({
+    from: new Date(2022, 0, 20),
+    to: addDays(new Date(2022, 0, 20), 20),
+  });
+
+  const [dateA, setDateA] = useState<Date>();
+
+  const [w5Page, setW5Page] = useState(1);
+
+  if (areaId == null) {
+    return (
+      <main className="p-4 sm:px-6 sm:py-0">
+        <div className="w-full">
+          <p className="text-center text-xl mt-8">
+            Es necesario haber seleccionada el area de algun tablero al entrar
+            aqui
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="p-4 sm:px-6 sm:py-0">
@@ -188,14 +216,18 @@ export default function AreaPage() {
           </TabsList>
         </div>
         <TabsContent value="dashboard">
-          <DatePickerRange className="w-full md:w-fit my-4" />
+          <DatePickerRange
+            className="w-full md:w-fit my-4"
+            from={date.from}
+            to={date.to}
+          />
           <div className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
                 <Card className="sm:col-span-2">
                   <CardHeader className="pb-3">
                     <CardDescription>
-                      Ene 20, 2022 - Feb 09. 2022 {"20 dias"}
+                      Ene 20, 2022 - Feb 09. 2022 {"( 20 dias )"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -221,7 +253,110 @@ export default function AreaPage() {
               </div>
               <Card>
                 <CardHeader className="px-7">
-                  <CardTitle>Causas</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <p>Causas</p>
+                    <Dialog>
+                      <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <SquareCheck className="w-4 h-4 mr-1" />
+                        Asignar Accion
+                      </DialogTrigger>
+                      <DialogContent>
+                        <div className="w-full flex gap-1">
+                          <Badge>Security</Badge>
+                          <Badge>Flexometro Linter</Badge>
+                        </div>
+                        <Input
+                          className="text-lg border-0 border-b"
+                          placeholder="Titulo"
+                        />
+                        <div className="flex justify-start">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"ghost"}
+                                className={cn(
+                                  "max-w-[280px] justify-start text-left font-normal",
+                                  !date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {dateA ? (
+                                  format(dateA, "PPP")
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">
+                                    Sin fecha limite
+                                  </span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={dateA}
+                                onSelect={setDateA}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Separator orientation="vertical" />
+                          <div className="flex items-center">
+                            <p className="text-xs text-gray-500 ml-2">👤</p>
+                            <Select>
+                              <SelectTrigger className="max-w-[180px] border-0">
+                                <SelectValue placeholder="Responsable" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="joseperalez">
+                                  Jose Peralez
+                                </SelectItem>
+                                <SelectItem value="yeraldi macias">
+                                  Yeraldi Macias
+                                </SelectItem>
+                                <SelectItem value="Montoya Hector">
+                                  Montoya Hector
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <Label htmlFor="description">Descripcion</Label>
+                        <Textarea id="description" placeholder="..."></Textarea>
+                        <Separator />
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor="problemainput">Problema</Label>
+                            <Input id="problemainput"></Input>
+                          </div>
+                          <div>
+                            <Label htmlFor="causaselect">Causa</Label>
+                            <Select>
+                              <SelectTrigger
+                                id="causaselect"
+                                className="w-full"
+                              >
+                                <SelectValue placeholder="Selecciona la Causa" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="light">
+                                  Mano Derecha
+                                </SelectItem>
+                                <SelectItem value="dark">
+                                  Mano Derecha
+                                </SelectItem>
+                                <SelectItem value="system">
+                                  Mano Derecha
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <Button disabled className="mt-4">
+                          Asignar
+                        </Button>
+                      </DialogContent>
+                    </Dialog>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col md:flex-row md:gap-4">
                   <ResponsiveContainer
@@ -271,9 +406,9 @@ export default function AreaPage() {
                     </ul>
                     <Dialog>
                       <DialogTrigger className="w-full">
-                        <Button className="w-full mt-2" variant={"ghost"}>
+                        <div className="mt-4 text-sm font-medium">
                           Mostrar Mas
-                        </Button>
+                        </div>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
@@ -330,7 +465,7 @@ export default function AreaPage() {
                     </CardDescription>
                   </div>
                   <div className="ml-auto flex items-center gap-1">
-                    <p className="mr-4 text-sm">2 / 4</p>
+                    <p className="mr-4 text-sm">{w5Page} / 4</p>
                     <Pagination className="ml-auto mr-0 w-auto">
                       <PaginationContent>
                         <PaginationItem>
@@ -338,6 +473,9 @@ export default function AreaPage() {
                             size="icon"
                             variant="outline"
                             className="h-6 w-6"
+                            onClick={() => {
+                              setW5Page(w5Page - 1);
+                            }}
                           >
                             <ChevronLeft className="h-3.5 w-3.5" />
                             <span className="sr-only">Previous Order</span>
@@ -348,6 +486,9 @@ export default function AreaPage() {
                             size="icon"
                             variant="outline"
                             className="h-6 w-6"
+                            onClick={() => {
+                              setW5Page(w5Page + 1);
+                            }}
                           >
                             <ChevronRight className="h-3.5 w-3.5" />
                             <span className="sr-only">Next Order</span>
@@ -398,7 +539,7 @@ export default function AreaPage() {
           <div className="w-full flex justify-center">
             <Card className="w-full max-w-[45rem]">
               <CardHeader>
-                <CardTitle>Ajsutes</CardTitle>
+                <CardTitle>Ajustes</CardTitle>
               </CardHeader>
               <CardContent>
                 <Label htmlFor="areaname">Nombre</Label>
@@ -433,5 +574,13 @@ export default function AreaPage() {
         </TabsContent>
       </Tabs>
     </main>
+  );
+}
+
+export default function AreaPageSuspended() {
+  return (
+    <Suspense>
+      <AreaPage></AreaPage>
+    </Suspense>
   );
 }
