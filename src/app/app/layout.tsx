@@ -32,6 +32,14 @@ export default function AppLayout({
     { name: "Flexometro Linter", id: "asdj1273jasd712" },
     { name: "Tornos Acero", id: "jfhassn12as9an1" },
   ]);
+
+  // TODO: Ver si puedo usar esto en useClient osea el cosa esta de login y protected routes
+  // Mas bien para ponerlo en el layout de /app/app
+  // Modificar el Middleware (creo que tambien seria necesario)
+  // TODO: Agregar el boton de logout
+  // TODO: Ver que onda con el registro de usuarios nuevos de una empresa, ya no en si la creacion de la cuetna de la empresa
+  // aunque tambien verlo.
+
   return (
     <>
       <header className="sticky z-40 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
