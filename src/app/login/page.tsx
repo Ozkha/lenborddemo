@@ -21,26 +21,26 @@ export default function LoginPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            name="email"
-            placeholder="m@ejemplo.com"
-            required
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Contraseña</Label>
-          <Input id="password" name="password" type="password" required />
-        </div>
+        <form>
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="m@ejemplo.com"
+              required
+            />
+          </div>
+          <div className="grid gap-2 mt-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Input id="password" name="password" type="password" required />
+          </div>
+          <Button formAction={login} className="w-full mt-4">
+            Ingresar
+          </Button>
+        </form>
       </CardContent>
-      <CardFooter>
-        <Button formAction={login} className="w-full">
-          Ingresar
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
