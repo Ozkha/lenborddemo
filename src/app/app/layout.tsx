@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  Bolt,
   CircleUser,
   Gauge,
   ListTodo,
@@ -33,12 +32,10 @@ export default function AppLayout({
     { name: "Tornos Acero", id: "jfhassn12as9an1" },
   ]);
 
-  // TODO: Ver si puedo usar esto en useClient osea el cosa esta de login y protected routes
-  // Mas bien para ponerlo en el layout de /app/app
-  // Modificar el Middleware (creo que tambien seria necesario)
-  // TODO: Agregar el boton de logout
-  // TODO: Ver que onda con el registro de usuarios nuevos de una empresa, ya no en si la creacion de la cuetna de la empresa
-  // aunque tambien verlo.
+  // TODO: Comunicacion frotnend y backend
+
+  // TODO: Ver que onda con el registro de usuarios nuevos de una empresa, ya no en si la creacion
+  // de la cuetna de la empresa aunque tambien verlo.
 
   return (
     <>
@@ -123,7 +120,9 @@ export default function AppLayout({
               <DropdownMenuItem>Ajustes</DropdownMenuItem>
               <DropdownMenuItem>Soporte</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Salir de cuenta</DropdownMenuItem>
+              <DropdownMenuItem>
+                <button>Salir de cuenta</button>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

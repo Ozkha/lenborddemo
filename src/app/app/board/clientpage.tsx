@@ -234,6 +234,7 @@ export default function BoardPage({ user }: { user: User }) {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex items-center">
+        {/* TODO: Eliminar este: */}
         <Select>
           <SelectTrigger className="w-fit rounded-none border-0 bg-transparent scroll-m-20 text-2xl font-semibold tracking-tight">
             <SelectValue placeholder="Selecciona Tablero" />

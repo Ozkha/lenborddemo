@@ -1,0 +1,105 @@
+import NextAuth, { type DefaultSession } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+
+import bcrypt from "bcryptjs";
+
+import { object, string, ZodError } from "zod";
+
+const signInSchema = object({
+  username: string({ required_error: "Usuario es requerido" }).min(
+    1,
+    "Usuario es requerido"
+  ),
+  password: string({ required_error: "Contraseña es requerida" })
+    .min(1, "Contraseña es requerida")
+    .min(8, "Contraseña minima de 8 caracteres")
+    .max(32, "Contraseña maxima de 32 caracteres"),
+});
+
+declare module "next-auth" {
+  /**
+   * Returned by `auth`, `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
+   */
+  interface Session {
+    user: {
+      /** The user's postal address. */
+      id: string;
+      /**
+       * By default, TypeScript merges new interface properties and overwrites existing ones.
+       * In this case, the default session user properties will be overwritten,
+       * with the new ones defined above. To keep the default session user properties,
+       * you need to add them back into the newly declared interface.
+       */
+    } & DefaultSession["user"];
+  }
+
+  interface JWT extends Record<string, unknown> {
+    name?: string | null;
+    email?: string | null;
+    picture?: string | null;
+    sub?: string;
+    iat?: number;
+    exp?: number;
+    jti?: string;
+
+    //Plus
+    id: string;
+  }
+}
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session({ session, token, user }) {
+      // `session.user.address` is now a valid property, and will be type-checked
+      // in places like `useSession().data.user` or `auth().user`
+      session.user.id = token.id as string;
+      return session;
+    },
+  },
+  providers: [
+    Credentials({
+      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
+      // e.g. domain, username, password, 2FA token, etc.
+      credentials: {
+        username: { label: "username", type: "text" },
+        password: { label: "password", type: "text" },
+      },
+      authorize: async (credentials) => {
+        try {
+          const { username, password } = await signInSchema.parseAsync(
+            credentials
+          );
+
+          const userFetched = await fetch(
+            "http:localhost:3000/api/getuser?username=" + username
+          );
+
+          if (!userFetched.json) {
+            return null;
+          }
+
+          const user = await userFetched.json();
+
+          const isCorrectPassword = bcrypt.compareSync(password, user.password);
+
+          if (!isCorrectPassword) {
+            throw new Error("Usuario o Contraseña Incorrecta");
+          }
+          return { id: user.id, name: user.name, username: user.username };
+        } catch (error) {
+          if (error instanceof ZodError) {
+            // Return `null` to indicate that the credentials are invalid
+            return null;
+          }
+          return null;
+        }
+      },
+    }),
+  ],
+});
