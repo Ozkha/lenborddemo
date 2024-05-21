@@ -31,3 +31,11 @@ export const users = mysqlTable("users", {
     .notNull(),
 });
 export type newUser = typeof users.$inferInsert;
+
+export const boards = mysqlTable("boards", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
