@@ -21,6 +21,7 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { signInServer } from "@/lib/signin";
 import { Label } from "@/components/ui/label";
+import { redirect, useRouter } from "next/navigation";
 
 const signInSchema = z.object({
   username: z.string().min(1, { message: "Es necesario un nombre de usuario" }),
@@ -37,6 +38,8 @@ export default function SignIn() {
   });
 
   const [errorAtSignIn, setErrorAtSignIn] = useState(false);
+
+  const router = useRouter();
 
   return (
     <div className="mx-auto h-screen flex items-center">
@@ -72,6 +75,7 @@ export default function SignIn() {
 
                       try {
                         await signInServer(formData);
+                        router.push("/app/boards");
                       } catch (e) {
                         setErrorAtSignIn(true);
                       }
