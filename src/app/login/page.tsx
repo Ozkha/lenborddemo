@@ -2,24 +2,14 @@
 
 import createCompanyUser from "@/actions/createCompanyUser";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { signIn } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,9 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { signInServer } from "@/lib/signin";
-
-// TODO: Diseniar el feedback que tendran los usuarios al ingresar.
-// Para registrarse nomas decir si esta bien o esta mal y ya. Si se logro o no. No quiero mas detalles.
+import { Label } from "@/components/ui/label";
 
 const signInSchema = z.object({
   username: z.string().min(1, { message: "Es necesario un nombre de usuario" }),
@@ -63,31 +51,6 @@ export default function SignIn() {
               <CardTitle>Ingresar</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <form
-                className="space-y-3"
-                action={async (formData) => {
-                  "use server";
-                  await signIn("credentials", formData);
-                }}
-              >
-                <div className="grid gap-2">
-                  <Label htmlFor="username">Usuario</Label>
-                  <Input id="username" type="text" name="username" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    name="password"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Ingresar
-                </Button>
-              </form> */}
-
               <Alert
                 variant="destructive"
                 className="mb-2"
@@ -155,7 +118,7 @@ export default function SignIn() {
               <CardTitle>Registro</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* <form
+              <form
                 className="space-y-2"
                 action={async (formData) => {
                   "use server";
@@ -187,7 +150,7 @@ export default function SignIn() {
                 <Button type="submit" className="w-full">
                   Registrar
                 </Button>
-              </form> */}
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
