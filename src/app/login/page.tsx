@@ -121,7 +121,6 @@ export default function SignIn() {
               <form
                 className="space-y-2"
                 action={async (formData) => {
-                  "use server";
                   await createCompanyUser(formData);
                 }}
               >
