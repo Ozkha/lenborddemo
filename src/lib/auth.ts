@@ -24,6 +24,7 @@ declare module "next-auth" {
     user: {
       /** The user's postal address. */
       id: string;
+      companyId: string;
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.
        * In this case, the default session user properties will be overwritten,
@@ -44,6 +45,7 @@ declare module "next-auth" {
 
     //Plus
     id: string;
+    companyId: string;
   }
 }
 
@@ -52,6 +54,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // @ts-ignore
+        token.companyId = user.companyId;
       }
       return token;
     },
@@ -59,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // `session.user.address` is now a valid property, and will be type-checked
       // in places like `useSession().data.user` or `auth().user`
       session.user.id = token.id as string;
+      session.user.companyId = token.companyId as string;
       return session;
     },
   },
@@ -91,7 +96,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!isCorrectPassword) {
             throw new Error("Usuario o Contraseña Incorrecta");
           }
-          return { id: user.id, name: user.name, username: user.username };
+
+          console.log("🧑", user);
+          return {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            companyId: user.companyId,
+          };
         } catch (error) {
           if (error instanceof ZodError) {
             // Return `null` to indicate that the credentials are invalid
