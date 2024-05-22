@@ -1,4 +1,5 @@
 import {
+  MySqlTable,
   bigint,
   mysqlEnum,
   mysqlTable,
@@ -39,3 +40,4 @@ export const boards = mysqlTable("boards", {
     .references(() => comapnies.id)
     .notNull(),
 });
+export type newBoard = typeof boards.$inferInsert;

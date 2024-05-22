@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import BoardsPage from "./clientpage";
 import { auth } from "@/lib/auth";
+import { db as database } from "@/db";
+import { boards } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export default async function BoardsPageS() {
   const session = await auth();
@@ -14,17 +17,15 @@ export default async function BoardsPageS() {
   }
 
   const user = session.user;
+  const db = await database;
+  const boardList = await db
+    .select()
+    .from(boards)
+    .where(sql`${boards.companyId}=${user.companyId}`);
 
-  const boardlist: {
-    name: string;
-    id: number;
-  }[] = [{ name: "Flexoemtro", id: 1 }];
-
-  // TODO: El user ya esta listo, seguir con lo que sigue de aqui
-  // Tal vez primero establecer el type de user.
   return (
     <>
-      <BoardsPage user={user} boardlist={boardlist}></BoardsPage>
+      <BoardsPage user={user} boardlist={boardList}></BoardsPage>
     </>
   );
 }
