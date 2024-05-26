@@ -1,10 +1,13 @@
 import {
   MySqlTable,
   bigint,
+  datetime,
+  json,
   mysqlEnum,
   mysqlTable,
   serial,
   text,
+  timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -41,3 +44,50 @@ export const boards = mysqlTable("boards", {
     .notNull(),
 });
 export type newBoard = typeof boards.$inferInsert;
+
+export const kpis = mysqlTable("kpi", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 150 }).notNull(),
+  metric: varchar("metric", { length: 300 }).notNull(),
+  fields: json("fields").$type<string[]>().notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
+
+export type newKpi = typeof kpis.$inferInsert;
+
+export const kpiGoals = mysqlTable("kpi_goals", {
+  id: serial("id").primaryKey(),
+  kpi_id: bigint("kpi_id", { unsigned: true, mode: "number" })
+    .references(() => kpis.id)
+    .notNull(),
+  createdAt: timestamp("created_at", { fsp: 2, mode: "date" })
+    .notNull()
+    .defaultNow(),
+  goal: json("goal")
+    .$type<
+      {
+        label: "success" | "fail" | "mid";
+        operator: "<" | ">" | ">=" | "<=";
+        amount: number;
+      }[]
+    >()
+    .notNull(),
+});
+
+export type newKpiGoal = typeof kpiGoals.$inferInsert;
+
+export const areas = mysqlTable("areas", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  boardId: bigint("board_id", { unsigned: true, mode: "number" })
+    .references(() => boards.id)
+    .notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+  kpiId: bigint("kpi_id", { unsigned: true, mode: "number" }).references(
+    () => kpis.id
+  ),
+});

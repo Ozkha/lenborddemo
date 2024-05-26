@@ -1,5 +1,6 @@
 "use client";
 
+import addKpi from "@/actions/addKpi";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,8 +18,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Pagination,
   PaginationContent,
@@ -36,7 +45,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -45,10 +53,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { User } from "@supabase/supabase-js";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { MinusCircle, Pencil, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type CategoryBarProps = {
   data: {
@@ -62,7 +73,7 @@ function CategoryBar({ data, className }: CategoryBarProps) {
     <div className={cn(["w-full", className])}>
       <div className="w-full flex justify-around mb-1">
         {data.map((val, i) => (
-          <p key={"label-" + val.color} className="text-xs">
+          <p key={"label-" + val.color + i} className="text-xs">
             {val.label}
           </p>
         ))}
@@ -88,32 +99,122 @@ type Kpi = {
   fields: string[];
   goal: { label: string; color: string; mean: string | undefined }[];
 };
-export default function KpisPage({ user }: { user: User }) {
+
+const kpiFormSchema = z.object({
+  name: z.string().min(2, { message: "Debe ingresar un nombre" }),
+  metric: z.string().min(2, { message: "Es necesaria una metrica valida" }),
+  goal: z
+    .array(
+      z.object({
+        label: z.enum(["success", "fail", "mid"]),
+        operator: z.enum(["<", ">", ">=", "<="]),
+        amount: z.number(),
+      })
+    )
+    .min(2, { message: "Debe haber por lo menos 2 elementos" })
+    .refine((data) => data[1].amount >= data[0].amount, {
+      message: "El segundo elemento debe ser mayor o igual al primero",
+    })
+    .refine((data) => data.length < 3 || data[2].amount >= data[1].amount, {
+      message:
+        "Si hay un tercer elemento,  debe ser mayor o igul que el del segundo.",
+    }),
+});
+
+export default function KpisPage({ user }: { user: any }) {
+  const kpiForm = useForm<z.infer<typeof kpiFormSchema>>({
+    resolver: zodResolver(kpiFormSchema),
+
+    defaultValues: {
+      name: "",
+      metric: "",
+      goal: [
+        {
+          label: "success",
+          operator: "<",
+          amount: 1,
+        },
+        {
+          label: "mid",
+          operator: "<",
+          amount: 2,
+        },
+        {
+          label: "fail",
+          operator: ">=",
+          amount: 2,
+        },
+      ],
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof kpiFormSchema>) {
+    try {
+      addKpi({
+        name: values.name,
+        metric: values.metric,
+        companyId: user.companyId,
+        goal: values.goal,
+      });
+      kpiForm.reset();
+      toast({
+        variant: "default",
+        title: "Okay!",
+        description: "KPI creado con exito",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible crear el KPI",
+      });
+    }
+  }
+
   const [currentGoal, setCurrentGoal] =
     useState<{ label: string; color: string; mean: string | undefined }[]>();
 
+  const [midValAux, setMidValAux] = useState<{
+    label: "success" | "mid" | "fail";
+    operator: "<" | ">" | "<=" | ">=";
+    amount: number;
+  }>({
+    label: "mid",
+    operator: "<",
+    amount: 2,
+  });
+
   const [kpisList, setKpisList] = useState<Kpi[]>([
-    {
-      name: "Utilidad marginal",
-      metric: "(ingresos / ganancias)*100",
-      fields: ["ingresos", "ganancias"],
-      goal: [
-        { label: "<=7", color: "bg-emerald-400", mean: "objetivo" },
-        { label: "<=9", color: "bg-amber-400", mean: undefined },
-        { label: ">=7", color: "bg-red-500", mean: "fallo" },
-      ],
-    },
-    {
-      name: "Accidentes",
-      metric: "accidentes",
-      fields: ["accidentes"],
-      goal: [
-        { label: "<=2", color: "bg-emerald-400", mean: "objetivo" },
-        { label: "<=3", color: "bg-amber-400", mean: undefined },
-        { label: ">3", color: "bg-red-500", mean: "fallo" },
-      ],
-    },
+    // {
+    //   name: "Utilidad marginal",
+    //   metric: "(ingresos/ganancias)*100",
+    //   fields: ["ingresos", "ganancias"],
+    //   goal: [
+    //     { label: "<=7", color: "bg-emerald-400", mean: "objetivo" },
+    //     { label: "<=9", color: "bg-amber-400", mean: undefined },
+    //     { label: ">=7", color: "bg-red-500", mean: "fallo" },
+    //   ],
+    // },
+    // {
+    //   name: "Accidentes",
+    //   metric: "accidentes",
+    //   fields: ["accidentes"],
+    //   goal: [
+    //     { label: "<=2", color: "bg-emerald-400", mean: "objetivo" },
+    //     { label: "<=3", color: "bg-amber-400", mean: undefined },
+    //     { label: ">3", color: "bg-red-500", mean: "fallo" },
+    //   ],
+    // },
   ]);
+
+  function getMetricFields(metric: string): string[] {
+    const regex = /[a-zA-Z_]\w*/g;
+    const coincidencias = metric.match(regex);
+
+    const variablesUnicas = [...new Set(coincidencias)];
+
+    return variablesUnicas;
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -138,106 +239,254 @@ export default function KpisPage({ user }: { user: User }) {
                     posible modificar la meta.
                   </DialogDescription>
                 </DialogHeader>
-                <div>
-                  <p className="text-sm font-semibold mb-2">Nombre</p>
-                  <Input
-                    type="text"
-                    placeholder="Nombre del KPI"
-                    className="mb-4"
-                  ></Input>
 
-                  <div>
-                    <p className="text-sm font-semibold mb-2">Metrica</p>
-                    <Input
-                      type="text"
-                      className="mb-4"
-                      placeholder="(accidentes/horas_trabajadas)*100"
-                    ></Input>
-                  </div>
-                  <div className="mt-4 mb-4">
-                    <p className="text-sm font-semibold">
-                      Campos identificados
-                    </p>
-                    <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
-                      <li>Accidentes</li>
-                      <li>Horas trabajadas</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold mb-2">Meta</p>
-                    <div className="w-full flex justify-around  mb-3">
-                      <p className="w-full text-sm font-medium text-center">
-                        Objetivo
-                      </p>
-                      <div className="w-full" />
-                      <p className="w-full text-sm font-medium text-center">
-                        Fallo
-                      </p>
-                    </div>
-                    <CategoryBar
-                      data={[
-                        { label: "<=7", color: "bg-emerald-400" },
-                        { label: "<=9", color: "bg-amber-400" },
-                        { label: ">=7", color: "bg-red-500" },
-                      ]}
+                <Form {...kpiForm}>
+                  <form onSubmit={kpiForm.handleSubmit(onSubmit)}>
+                    <FormField
+                      control={kpiForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nombre del KPI" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <div className="w-full flex gap-1 mt-1">
-                      <div className="w-full flex justify-center gap-1">
-                        <Select>
-                          <SelectTrigger defaultValue={"minusorequalsthan"}>
-                            <SelectValue placeholder="<" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="minusthan">{"<"}</SelectItem>
-                            <SelectItem value="minusorequalsthan">
-                              {"<="}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input type="number" value={5} />
-                      </div>
-                      <div className="w-full flex justify-center gap-1">
-                        <Select>
-                          <SelectTrigger defaultValue={"minusorequalsthan"}>
-                            <SelectValue placeholder="<" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="minusthan">{"<"}</SelectItem>
-                            <SelectItem value="minusorequalsthan">
-                              {"<="}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input type="number" value={7} />
-                      </div>
-                      <div className="w-full flex justify-center gap-1">
-                        <Select>
-                          <SelectTrigger defaultValue={"gratherthan"}>
-                            <SelectValue placeholder=">" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="gratherthan">{">"}</SelectItem>
-                            <SelectItem value="gratherorequalsthan">
-                              {">="}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input type="number" value={7} />
-                      </div>
+                    <FormField
+                      control={kpiForm.control}
+                      name="metric"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Metrica</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="(accidentes/horas_trabajadas)*100"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            No usar espacios en los nombres de las variables o
+                            campos. Asegurarse de cerrar los parentesis abiertos
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="mt-4 mb-4">
+                      <p className="text-sm font-semibold">
+                        Campos identificados
+                      </p>
+                      <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
+                        {getMetricFields(kpiForm.watch().metric).map(
+                          (field, i) => (
+                            <li key={"cmps-" + field}>{field}</li>
+                          )
+                        )}
+                      </ul>
                     </div>
-                    <div className="flex flex-row flex-nowrap gap-2 mt-3">
-                      <Button className="w-full" variant={"outline"}>
-                        <RotateCcw className="w-4 h-5 mr-1" />
-                        Invertir
-                      </Button>
-                      <Button className="w-full" variant={"outline"}>
-                        <MinusCircle className="w-4 h-5 mr-1" />
-                        Eliminar Parcial
-                      </Button>
-                    </div>
-                  </div>
-                  <Button className="w-full mt-6">Agregar KPI</Button>
-                </div>
+
+                    <FormField
+                      control={kpiForm.control}
+                      name="goal"
+                      render={(fieldMayor) => (
+                        <FormItem>
+                          <FormLabel>Meta</FormLabel>
+                          <div className="w-full flex justify-around mb-3">
+                            <p className="w-full text-sm font-medium text-center">
+                              {fieldMayor.field.value[0].label == "success"
+                                ? "Objetivo"
+                                : "Fallo"}
+                            </p>
+                            <div className="w-full" />
+                            <p className="w-full text-sm font-medium text-center">
+                              {fieldMayor.field.value[
+                                fieldMayor.field.value.length - 1
+                              ].label == "success"
+                                ? "Objetivo"
+                                : "Fallo"}
+                            </p>
+                          </div>
+                          <CategoryBar
+                            data={fieldMayor.field.value.map((goal) => {
+                              const getColor = (
+                                label: "success" | "fail" | "mid"
+                              ) => {
+                                if (label == "success") return "bg-emerald-400";
+                                if (label == "fail") return "bg-red-500";
+                                else {
+                                  return "bg-amber-400";
+                                }
+                              };
+
+                              return {
+                                label: goal.operator + "" + goal.amount,
+                                color: getColor(goal.label),
+                              };
+                            })}
+                          />
+                          <div className="w-full flex gap-1">
+                            {kpiForm.getValues().goal.map((val, index) => (
+                              <FormField
+                                key={"slecs-" + index}
+                                control={kpiForm.control}
+                                name="goal"
+                                render={({ field }) => {
+                                  return (
+                                    <FormItem
+                                      key={"formI" + index}
+                                      className=" flex items-center  justify-center gap-1 w-full"
+                                    >
+                                      <Select
+                                        onValueChange={(newOperator) => {
+                                          const updatedState = [...field.value];
+
+                                          const stateToModify =
+                                            updatedState[index];
+
+                                          stateToModify.operator =
+                                            newOperator as
+                                              | "<"
+                                              | ">"
+                                              | "<="
+                                              | ">=";
+
+                                          field.onChange(updatedState);
+                                        }}
+                                        // value={field.value[index].operator}
+                                        defaultValue={
+                                          field.value[index].operator
+                                        }
+                                      >
+                                        <SelectTrigger className="mt-2">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {index == 0 ||
+                                          index < field.value.length - 1 ? (
+                                            <>
+                                              <SelectItem value="<">
+                                                {"<"}
+                                              </SelectItem>
+                                              <SelectItem value="<=">
+                                                {"<="}
+                                              </SelectItem>
+                                            </>
+                                          ) : (
+                                            <></>
+                                          )}
+
+                                          {index == field.value.length - 1 ? (
+                                            <>
+                                              {" "}
+                                              <SelectItem value=">">
+                                                {">"}
+                                              </SelectItem>
+                                              <SelectItem value=">=">
+                                                {">="}
+                                              </SelectItem>
+                                            </>
+                                          ) : (
+                                            <></>
+                                          )}
+                                        </SelectContent>
+                                      </Select>
+                                      <Input
+                                        type="number"
+                                        defaultValue={field.value[index].amount}
+                                        onChange={(e) => {
+                                          e.preventDefault();
+                                          const valueInput = e.target.value;
+                                          const updatedState = [...field.value];
+
+                                          const stateToModify =
+                                            updatedState[index];
+
+                                          stateToModify.amount =
+                                            Number(valueInput);
+
+                                          field.onChange(updatedState);
+                                        }}
+                                      />
+                                    </FormItem>
+                                  );
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <div className="flex flex-row flex-nowrap gap-2 mt-3">
+                            <Button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const updatedState = [
+                                  ...fieldMayor.field.value,
+                                ];
+
+                                const firstVal = updatedState[0];
+                                const lastVal =
+                                  updatedState[
+                                    fieldMayor.field.value.length - 1
+                                  ];
+                                if (firstVal.label == "fail") {
+                                  firstVal.label = "success";
+                                } else if (firstVal.label == "success") {
+                                  firstVal.label = "fail";
+                                }
+
+                                if (lastVal.label == "fail") {
+                                  lastVal.label = "success";
+                                } else if (lastVal.label == "success") {
+                                  lastVal.label = "fail";
+                                }
+
+                                fieldMayor.field.onChange([...updatedState]);
+                              }}
+                              className="w-full"
+                              variant={"outline"}
+                            >
+                              <RotateCcw className="w-4 h-5 mr-1" />
+                              Invertir
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                // FIXME: Se confun den el mid y el ultimo, en el UI. en formulario No.
+                                e.preventDefault();
+                                const updatedState = [
+                                  ...fieldMayor.field.value,
+                                ];
+
+                                if (fieldMayor.field.value.length > 2) {
+                                  setMidValAux(updatedState[1]);
+                                  updatedState.splice(1, 1);
+                                  fieldMayor.field.onChange(updatedState);
+                                }
+                                if (fieldMayor.field.value.length < 3) {
+                                  const futureThird = updatedState[1];
+                                  updatedState.push(futureThird);
+                                  updatedState[1] = midValAux;
+
+                                  fieldMayor.field.onChange(updatedState);
+                                }
+                              }}
+                              className="w-full"
+                              variant={"outline"}
+                            >
+                              <MinusCircle className="w-4 h-5 mr-1" />
+                              Eliminar o agregar Parcial
+                            </Button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full mt-6">
+                      Agregar KPI
+                    </Button>
+                  </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>
@@ -255,6 +504,17 @@ export default function KpisPage({ user }: { user: User }) {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {/* 
+                Talvezagregar esto en el footer
+              {kpisList.length < 1 ? (
+                <div className="w-full mt-4">
+                  <p className="text-center">
+                    No hay KPI's disponibles, cree uno nuevo.
+                  </p>
+                </div>
+              ) : (
+                <></>
+              )} */}
               {kpisList.map((kpi) => (
                 <TableRow key={"kpi-" + kpi.name}>
                   <TableCell className="font-medium">{kpi.name}</TableCell>
@@ -380,7 +640,7 @@ export default function KpisPage({ user }: { user: User }) {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter>
+        {/* <CardFooter>
           <div className="w-full">
             <div className="text-xs text-muted-foreground">
               Se muestran <strong>1-10</strong> de <strong>32</strong> KPI{"'"}s
@@ -410,7 +670,7 @@ export default function KpisPage({ user }: { user: User }) {
               </PaginationContent>
             </Pagination>
           </div>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </main>
   );
