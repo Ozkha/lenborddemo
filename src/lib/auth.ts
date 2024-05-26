@@ -97,7 +97,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error("Usuario o Contraseña Incorrecta");
           }
 
-          console.log("🧑", user);
           return {
             id: user.id,
             name: user.name,
