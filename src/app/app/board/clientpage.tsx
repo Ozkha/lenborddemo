@@ -2,14 +2,15 @@
 
 import DonughtProgress from "@/components/charts/donughtprogress";
 import { Combobox } from "@/components/ui-compounded/combobox";
-import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,11 +24,23 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { User } from "@supabase/supabase-js";
-import { BookUp, ListTodo, Plus } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { BookUp, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { z } from "zod";
+import { changeBoardName } from "@/actions/changeBoardName";
+import { toast } from "@/components/ui/use-toast";
 
 const lugares = [
   {
@@ -96,19 +109,44 @@ type Area = {
   }[];
   kpiname: string;
   mainCauses: { label: string; weight: number }[];
-  lasttaskupdate: string;
 };
 
-export default function BoardPage({ user }: { user: User }) {
-  const params = useSearchParams();
-  const boardId = params.get("board");
-  //TODO Este boardId se utilizaar para ya seleccionar el tablero con base al navbar sin tener que
-  // seleccionarlo en el select.
+type ClientBoardPageProps = {
+  user: any;
+  boardInfo: { id: number; name: string };
+};
 
-  const [boardList, setBoardList] = useState([
-    { label: "Flexometro Linter", value: "asjdh1j23asd" },
-    { label: "Tornos Acero", value: "asdjkh123asd" },
-  ]);
+const boardNameFormSchema = z.object({
+  name: z.string().min(2, { message: "Es necesario un nombre valido" }),
+});
+
+export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
+  const boardNameForm = useForm<z.infer<typeof boardNameFormSchema>>({
+    resolver: zodResolver(boardNameFormSchema),
+    defaultValues: {
+      name: boardInfo.name,
+    },
+  });
+
+  function onSubmitChangeName(values: z.infer<typeof boardNameFormSchema>) {
+    try {
+      changeBoardName({
+        name: values.name,
+        boardId: boardInfo.id,
+      });
+
+      toast({
+        title: "Okay!",
+        description: "Nombre del tablero cambiado con exito",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible cambiar el nombre del Tablero",
+      });
+    }
+  }
 
   const [areaList, setAreaList] = useState<Area[]>([
     {
@@ -152,7 +190,6 @@ export default function BoardPage({ user }: { user: User }) {
         { label: "Mano izquierda", weight: 13 },
         { label: "Rodilla", weight: 8 },
       ],
-      lasttaskupdate: "10 mins", //TODO: Hacerlo Date Talvez
     },
   ]);
 
@@ -216,7 +253,6 @@ export default function BoardPage({ user }: { user: User }) {
         ],
         kpiname: "Sin KPI",
         mainCauses: [],
-        lasttaskupdate: "",
       },
     ]);
   };
@@ -234,21 +270,44 @@ export default function BoardPage({ user }: { user: User }) {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="flex items-center">
-        {/* TODO: Eliminar este: */}
-        <Select>
-          <SelectTrigger className="w-fit rounded-none border-0 bg-transparent scroll-m-20 text-2xl font-semibold tracking-tight">
-            <SelectValue placeholder="Selecciona Tablero" />
-          </SelectTrigger>
-          <SelectContent>
-            {boardList.map((board, id) => (
-              <SelectItem key={"board-" + board.value} value={board.value}>
-                {board.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <p className="w-fit rounded-none border-0 bg-transparent scroll-m-20 text-2xl font-semibold tracking-tight">
+          {boardInfo.name}
+        </p>
+        <Dialog>
+          <DialogTrigger>
+            <Pencil className="w-4 h-4 ml-2" />
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nombre Tablero</DialogTitle>
+            </DialogHeader>
+            <Form {...boardNameForm}>
+              <form
+                onSubmit={boardNameForm.handleSubmit(onSubmitChangeName)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={boardNameForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input type="text" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full" type="submit">
+                  Cambiar Nombre
+                </Button>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
         <Select defaultValue="abril">
-          <SelectTrigger className="w-fit rounded-none border-0 bg-transparent text-base text-muted-foreground">
+          <SelectTrigger className="ml-1 w-fit rounded-none border-0 bg-transparent text-base text-muted-foreground">
             <SelectValue placeholder="Mes" />
           </SelectTrigger>
           <SelectContent>
@@ -307,7 +366,7 @@ export default function BoardPage({ user }: { user: User }) {
                   <></>
                 )}
               </div>
-              <Alert className="">
+              {/* <Alert className="">
                 <ListTodo className="h-4 w-4" />
                 <AlertTitle className="flex flex-row justify-between align-bottom items-baseline">
                   Ultima tarea completada
@@ -315,7 +374,7 @@ export default function BoardPage({ user }: { user: User }) {
                     {area.lasttaskupdate}
                   </span>
                 </AlertTitle>
-              </Alert>
+              </Alert> */}
             </CardContent>
           </Card>
         ))}
