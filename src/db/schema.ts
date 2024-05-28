@@ -80,14 +80,33 @@ export type newKpiGoal = typeof kpiGoals.$inferInsert;
 
 export const areas = mysqlTable("areas", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
+  name: varchar("name", { length: 50 }).notNull(),
   boardId: bigint("board_id", { unsigned: true, mode: "number" })
     .references(() => boards.id)
     .notNull(),
   companyId: bigint("company_id", { unsigned: true, mode: "number" })
     .references(() => comapnies.id)
     .notNull(),
-  kpiId: bigint("kpi_id", { unsigned: true, mode: "number" }).references(
-    () => kpis.id
-  ),
+  kpiId: bigint("kpi_id", { unsigned: true, mode: "number" })
+    .references(() => kpis.id)
+    .notNull(),
 });
+
+// Area -5whys -- Creo que no estan directamenre relacionados con un KPI
+// - id
+// - area_id
+// - conpany_id
+// - what
+// - where (list of places that can be added on the act)
+// - who (Reference to user_id, or entity)
+// - when (default now, but the user can select, but moving around calendar, not direcnlty on dump)
+// - why (cause?)
+
+// Area - kpi_tracking
+// - id
+// - fecha
+// - board_id (nose)
+// - kpi_id
+// - values
+// - area_id
+// - compny_id

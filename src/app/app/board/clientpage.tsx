@@ -41,6 +41,8 @@ import {
 import { z } from "zod";
 import { changeBoardName } from "@/actions/changeBoardName";
 import { toast } from "@/components/ui/use-toast";
+import { min } from "drizzle-orm";
+import { addAreaInBoard } from "@/actions/addArea";
 
 const lugares = [
   {
@@ -114,17 +116,47 @@ type Area = {
 type ClientBoardPageProps = {
   user: any;
   boardInfo: { id: number; name: string };
+  kpiList: { id: number; name: string }[];
+  areaList: {
+    id: number;
+    name: string;
+    kpiId: number;
+    // TODO: Por ahora estoy 2 estaran asi.
+    mainCauses: { label: string; weight: number }[];
+    data: {
+      label: string;
+      state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+    }[];
+  }[];
 };
 
 const boardNameFormSchema = z.object({
   name: z.string().min(2, { message: "Es necesario un nombre valido" }),
 });
 
-export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
+const newAreaFormSchema = z.object({
+  name: z.string().min(2, { message: "Es necesario un nombre valido" }),
+  kpiId: z.string().transform((id) => Number(id)),
+});
+
+export default function BoardPage({
+  user,
+  boardInfo,
+  kpiList,
+  areaList,
+}: ClientBoardPageProps) {
   const boardNameForm = useForm<z.infer<typeof boardNameFormSchema>>({
     resolver: zodResolver(boardNameFormSchema),
     defaultValues: {
       name: boardInfo.name,
+    },
+  });
+
+  const newAreaForm = useForm<z.infer<typeof newAreaFormSchema>>({
+    resolver: zodResolver(newAreaFormSchema),
+    defaultValues: {
+      name: "",
+      kpiId: -1,
     },
   });
 
@@ -148,7 +180,30 @@ export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
     }
   }
 
-  const [areaList, setAreaList] = useState<Area[]>([
+  function obSubmitNewAreaInBoard(values: z.infer<typeof newAreaFormSchema>) {
+    try {
+      addAreaInBoard({
+        name: values.name,
+        boardId: boardInfo.id,
+        companyId: user.companyId,
+        kpiId: values.kpiId,
+      });
+      newAreaForm.reset();
+
+      toast({
+        title: "Okay!",
+        description: "Area del tablero creado con exito",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible crear el area del Tablero",
+      });
+    }
+  }
+
+  const [areaLists, setAreaList] = useState<Area[]>([
     {
       title: "Security",
       data: [
@@ -211,50 +266,6 @@ export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
     if (weight < 25) return "text-[25px] font-semibold";
     if (weight < 27) return "text-[27px] font-semibold";
     if (weight <= 29) return "text-[29px] font-semibold";
-  };
-
-  const addArea = () => {
-    setAreaList([
-      ...areaList,
-      {
-        title: "sin nombre",
-        data: [
-          { label: "Dia 1", state: "empty" },
-          { label: "Dia 2", state: "empty" },
-          { label: "Dia 3", state: "empty" },
-          { label: "Dia 4", state: "empty" },
-          { label: "Dia 5", state: "empty" },
-          { label: "Dia 6", state: "empty" },
-          { label: "Dia 7", state: "empty" },
-          { label: "Dia 8", state: "empty" },
-          { label: "Dia 9", state: "empty" },
-          { label: "Dia 10", state: "empty" },
-          { label: "Dia 11", state: "empty" },
-          { label: "Dia 12", state: "empty" },
-          { label: "Dia 13", state: "empty" },
-          { label: "Dia 14", state: "empty" },
-          { label: "Dia 15", state: "empty" },
-          { label: "Dia 16", state: "empty" },
-          { label: "Dia 17", state: "empty" },
-          { label: "Dia 18", state: "empty" },
-          { label: "Dia 19", state: "empty" },
-          { label: "Dia 20", state: "empty" },
-          { label: "Dia 21", state: "empty" },
-          { label: "Dia 22", state: "empty" },
-          { label: "Dia 23", state: "empty" },
-          { label: "Dia 24", state: "empty" },
-          { label: "Dia 25", state: "empty" },
-          { label: "Dia 26", state: "empty" },
-          { label: "Dia 27", state: "empty" },
-          { label: "Dia 28", state: "empty" },
-          { label: "Dia 29", state: "empty" },
-          { label: "Dia 30", state: "empty" },
-          { label: "Dia 31", state: "empty" },
-        ],
-        kpiname: "Sin KPI",
-        mainCauses: [],
-      },
-    ]);
   };
 
   // DEL MODAL de KPI y dump info:
@@ -328,7 +339,7 @@ export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
       </div>
       <div className="grid gap-4 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
         {areaList.map((area) => (
-          <Card key={"area-" + area.title}>
+          <Card key={"area-" + area.id}>
             <CardHeader className="pb-0">
               <Link href={"/app/area?area='eso123'"}>
                 <Button className="w-fit p-0" variant={"ghost"}>
@@ -343,10 +354,10 @@ export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
                   setIdexModal(index);
                   setModalIsOpen(true);
                 }}
-                title={area.title}
+                title={area.name}
               />
               <p className="text-center mt-2 text-muted-foreground">
-                {area.kpiname}
+                {kpiList.find((kpi) => kpi.id === area.id)?.name}
               </p>
               <div className="flex flex-row justify-around gap-4 md:gap-10 xl:gap-12 my-6 ">
                 {area.mainCauses.map((cause) => (
@@ -379,10 +390,74 @@ export default function BoardPage({ user, boardInfo }: ClientBoardPageProps) {
           </Card>
         ))}
 
-        <Button onClick={addArea} variant={"secondary"} className="p-16 ">
-          <Plus className="h-5 w-5 mr-2"></Plus>
-          Agregar KPI area
-        </Button>
+        <Dialog>
+          <DialogTrigger className="p=16">
+            <Plus className="h-5 w-5 mr-2"></Plus>
+            Agregar KPI area
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nueva Area en el Tablero</DialogTitle>
+            </DialogHeader>
+            <Form {...newAreaForm}>
+              <form
+                onSubmit={newAreaForm.handleSubmit(obSubmitNewAreaInBoard)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={newAreaForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre del area</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ej. Security, Calidad, People, Gasto"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={newAreaForm.control}
+                  name="kpiId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>KPI</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {kpiList.map((kpi) => (
+                            <SelectItem
+                              key={"kpiL-" + kpi.id}
+                              value={kpi.id.toString()}
+                            >
+                              {kpi.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full" type="submit">
+                  Agregar Area
+                </Button>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
       <Dialog
         onOpenChange={(val) => {

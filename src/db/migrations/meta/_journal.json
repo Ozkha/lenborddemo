@@ -64,6 +64,20 @@
       "when": 1716678163103,
       "tag": "0008_wooden_northstar",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1716845432605,
+      "tag": "0009_colossal_cannonball",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1716862259439,
+      "tag": "0010_hard_the_captain",
+      "breakpoints": true
     }
   ]
 }

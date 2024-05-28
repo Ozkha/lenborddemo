@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import BoardPage from "./clientpage";
 import { redirect, useSearchParams } from "next/navigation";
 import { db as database } from "@/db";
-import { boards } from "@/db/schema";
+import { areas, boards, kpis } from "@/db/schema";
 import { sql } from "drizzle-orm";
 
 export default async function BooardPageSuspensed({ searchParams }: any) {
@@ -36,9 +36,77 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     .from(boards)
     .where(sql`${boards.id}=${boardId}`);
 
+  const kpiList = await db
+    .select({
+      id: kpis.id,
+      name: kpis.name,
+    })
+    .from(kpis);
+
+  const areaPerBoardList = await db
+    .select({ id: areas.id, name: areas.name, kpiId: areas.kpiId })
+    .from(areas)
+    .where(
+      sql`${areas.companyId}=${user.companyId} and ${areas.boardId}=${boardInfo.id}`
+    );
+
+  const areaPerBoardListAlter = areaPerBoardList.map((area) => {
+    return {
+      ...area,
+      mainCauses: [],
+      data: [
+        { label: "Dia 1", state: "fail" },
+        { label: "Dia 2", state: "success" },
+        { label: "Dia 3", state: "midpoint" },
+        { label: "Dia 4", state: "disabled" },
+        { label: "Dia 5", state: "success" },
+        { label: "Dia 6", state: "fail" },
+        { label: "Dia 7", state: "fail" },
+        { label: "Dia 8", state: "empty" },
+        { label: "Dia 9", state: "empty" },
+        { label: "Dia 10", state: "empty" },
+        { label: "Dia 11", state: "empty" },
+        { label: "Dia 12", state: "empty" },
+        { label: "Dia 13", state: "empty" },
+        { label: "Dia 14", state: "empty" },
+        { label: "Dia 15", state: "empty" },
+        { label: "Dia 16", state: "empty" },
+        { label: "Dia 17", state: "empty" },
+        { label: "Dia 18", state: "empty" },
+        { label: "Dia 19", state: "empty" },
+        { label: "Dia 20", state: "empty" },
+        { label: "Dia 21", state: "empty" },
+        { label: "Dia 22", state: "empty" },
+        { label: "Dia 23", state: "empty" },
+        { label: "Dia 24", state: "empty" },
+        { label: "Dia 25", state: "empty" },
+        { label: "Dia 26", state: "empty" },
+        { label: "Dia 27", state: "empty" },
+        { label: "Dia 28", state: "empty" },
+        { label: "Dia 29", state: "empty" },
+        { label: "Dia 30", state: "empty" },
+        { label: "Dia 31", state: "empty" },
+      ],
+    };
+  }) as {
+    id: number;
+    name: string;
+    kpiId: number;
+    mainCauses: { label: string; weight: number }[];
+    data: {
+      label: string;
+      state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+    }[];
+  }[];
+
   return (
     <>
-      <BoardPage boardInfo={boardInfo} user={user}></BoardPage>
+      <BoardPage
+        areaList={areaPerBoardListAlter}
+        kpiList={kpiList}
+        boardInfo={boardInfo}
+        user={user}
+      ></BoardPage>
     </>
   );
 }
