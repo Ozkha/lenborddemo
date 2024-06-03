@@ -43,6 +43,9 @@ import { changeBoardName } from "@/actions/changeBoardName";
 import { toast } from "@/components/ui/use-toast";
 import { min } from "drizzle-orm";
 import { addAreaInBoard } from "@/actions/addArea";
+import { date, year } from "drizzle-orm/mysql-core";
+import { setKpiTrackingDayValue } from "@/actions/setKpiTackingDayValue";
+import { useRouter } from "next/navigation";
 
 const lugares = [
   {
@@ -103,29 +106,27 @@ const causas = [
   },
 ];
 
-type Area = {
-  title: string;
-  data: {
-    label: string;
-    state: "fail" | "success" | "midpoint" | "disabled" | "empty";
-  }[];
-  kpiname: string;
-  mainCauses: { label: string; weight: number }[];
-};
-
 type ClientBoardPageProps = {
   user: any;
   boardInfo: { id: number; name: string };
-  kpiList: { id: number; name: string }[];
+  kpiList: { id: number; name: string; fields: string[] }[];
+  dateInfo: {
+    month: number;
+    year: number;
+    maxDays: number;
+  };
   areaList: {
     id: number;
     name: string;
-    kpiId: number;
-    // TODO: Por ahora estoy 2 estaran asi.
-    mainCauses: { label: string; weight: number }[];
+    kpi: {
+      id: number;
+      name: string;
+      fields: string[];
+    };
     data: {
-      label: string;
-      state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+      status: "success" | "fail" | "mid" | "disabled" | "empty" | null;
+      fieldValues: number[];
+      day: number;
     }[];
   }[];
 };
@@ -139,24 +140,28 @@ const newAreaFormSchema = z.object({
   kpiId: z.string().transform((id) => Number(id)),
 });
 
+const updateKpiDayTrackFormSchema = z.object({
+  values: z.number().array(),
+  diaInhabil: z.boolean(),
+  day: z.number(),
+  month: z.number(),
+  year: z.number(),
+  areaId: z.number(),
+  kpiId: z.number(),
+});
+
 export default function BoardPage({
   user,
   boardInfo,
   kpiList,
+  dateInfo,
   areaList,
 }: ClientBoardPageProps) {
+  const router = useRouter();
   const boardNameForm = useForm<z.infer<typeof boardNameFormSchema>>({
     resolver: zodResolver(boardNameFormSchema),
     defaultValues: {
       name: boardInfo.name,
-    },
-  });
-
-  const newAreaForm = useForm<z.infer<typeof newAreaFormSchema>>({
-    resolver: zodResolver(newAreaFormSchema),
-    defaultValues: {
-      name: "",
-      kpiId: -1,
     },
   });
 
@@ -179,6 +184,14 @@ export default function BoardPage({
       });
     }
   }
+
+  const newAreaForm = useForm<z.infer<typeof newAreaFormSchema>>({
+    resolver: zodResolver(newAreaFormSchema),
+    defaultValues: {
+      name: "",
+      kpiId: -1,
+    },
+  });
 
   function obSubmitNewAreaInBoard(values: z.infer<typeof newAreaFormSchema>) {
     try {
@@ -203,61 +216,50 @@ export default function BoardPage({
     }
   }
 
-  const [areaLists, setAreaList] = useState<Area[]>([
-    {
-      title: "Security",
-      data: [
-        { label: "Dia 1", state: "fail" },
-        { label: "Dia 2", state: "success" },
-        { label: "Dia 3", state: "midpoint" },
-        { label: "Dia 4", state: "disabled" },
-        { label: "Dia 5", state: "success" },
-        { label: "Dia 6", state: "fail" },
-        { label: "Dia 7", state: "fail" },
-        { label: "Dia 8", state: "empty" },
-        { label: "Dia 9", state: "empty" },
-        { label: "Dia 10", state: "empty" },
-        { label: "Dia 11", state: "empty" },
-        { label: "Dia 12", state: "empty" },
-        { label: "Dia 13", state: "empty" },
-        { label: "Dia 14", state: "empty" },
-        { label: "Dia 15", state: "empty" },
-        { label: "Dia 16", state: "empty" },
-        { label: "Dia 17", state: "empty" },
-        { label: "Dia 18", state: "empty" },
-        { label: "Dia 19", state: "empty" },
-        { label: "Dia 20", state: "empty" },
-        { label: "Dia 21", state: "empty" },
-        { label: "Dia 22", state: "empty" },
-        { label: "Dia 23", state: "empty" },
-        { label: "Dia 24", state: "empty" },
-        { label: "Dia 25", state: "empty" },
-        { label: "Dia 26", state: "empty" },
-        { label: "Dia 27", state: "empty" },
-        { label: "Dia 28", state: "empty" },
-        { label: "Dia 29", state: "empty" },
-        { label: "Dia 30", state: "empty" },
-        { label: "Dia 31", state: "empty" },
-      ],
-      kpiname: "Menos de 3 accidentes",
-      mainCauses: [
-        { label: "Mano derecha", weight: 24 },
-        { label: "Mano izquierda", weight: 13 },
-        { label: "Rodilla", weight: 8 },
-      ],
+  const updateKpiDayTrackForm = useForm<
+    z.infer<typeof updateKpiDayTrackFormSchema>
+  >({
+    resolver: zodResolver(updateKpiDayTrackFormSchema),
+    defaultValues: {
+      diaInhabil: false,
+      values: [],
+      month: dateInfo.month,
+      year: dateInfo.year,
     },
-  ]);
+  });
+
+  function onSubmitUpdateKpiDayTrack(
+    values: z.infer<typeof updateKpiDayTrackFormSchema>
+  ) {
+    // TODO: Aqui ando, Ahora si que pase lo bueno
+    const fecha = new Date(values.year, values.month - 1, values.day);
+    const ahora = new Date();
+    fecha.setHours(ahora.getHours());
+    fecha.setMinutes(ahora.getMinutes());
+    fecha.setSeconds(ahora.getSeconds());
+    fecha.setMilliseconds(ahora.getMilliseconds());
+
+    console.log("🚀 ", values);
+
+    try {
+      setKpiTrackingDayValue({
+        date: fecha,
+        areaId: values.areaId,
+        kpiId: values.kpiId,
+        diaInhabil: values.diaInhabil,
+        values: values.values,
+        companyId: user.companyId,
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible crear actualizar la informacion",
+      });
+    }
+  }
 
   const setTextSizeByCauseWeight = (weight: number) => {
-    const textWeights = [
-      "text-[15px]",
-      "text-[17px]",
-      "text-[19px]",
-      "text-[21px]",
-      "text-[23px]",
-      "text-[25px]",
-      "text-[27px]",
-    ];
     if (weight < 15) return "text-[15px]";
     if (weight < 17) return "text-[17px]";
     if (weight < 19) return "text-[19px]";
@@ -269,8 +271,14 @@ export default function BoardPage({
   };
 
   // DEL MODAL de KPI y dump info:
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [indexModal, setIdexModal] = useState(0);
+  const [areaModalIsOpen, setAreaModalIsOpen] = useState(false);
+  const [areaModalInfo, setAreaModalInfo] = useState<{
+    dayIndex: number;
+    areaId: number;
+    name: string;
+    kpiId: number;
+    fields: string[];
+  }>();
   const [diaInhabil, setDiaIhabil] = useState(false);
 
   // Form del 5W
@@ -317,23 +325,30 @@ export default function BoardPage({
           </DialogContent>
         </Dialog>
 
-        <Select defaultValue="abril">
+        <Select
+          onValueChange={(newVal) => {
+            router.replace(
+              "/app/board?board=" + boardInfo.id + "&month=" + newVal
+            );
+          }}
+          defaultValue={dateInfo.month.toString()}
+        >
           <SelectTrigger className="ml-1 w-fit rounded-none border-0 bg-transparent text-base text-muted-foreground">
             <SelectValue placeholder="Mes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="enero">Enero</SelectItem>
-            <SelectItem value="febrero">Febrero</SelectItem>
-            <SelectItem value="marzo">Marzo</SelectItem>
-            <SelectItem value="abril">Abril</SelectItem>
-            <SelectItem value="mayo">Mayo</SelectItem>
-            <SelectItem value="junio">Junio</SelectItem>
-            <SelectItem value="julio">Julio</SelectItem>
-            <SelectItem value="agosto">Agosto</SelectItem>
-            <SelectItem value="septiembre">Septiembre</SelectItem>
-            <SelectItem value="octubre">Octubre</SelectItem>
-            <SelectItem value="noviembre">Noviembre</SelectItem>
-            <SelectItem value="diciembre">Diciembre</SelectItem>
+            <SelectItem value="1">Enero</SelectItem>
+            <SelectItem value="2">Febrero</SelectItem>
+            <SelectItem value="3">Marzo</SelectItem>
+            <SelectItem value="4">Abril</SelectItem>
+            <SelectItem value="5">Mayo</SelectItem>
+            <SelectItem value="6">Junio</SelectItem>
+            <SelectItem value="7">Julio</SelectItem>
+            <SelectItem value="8">Agosto</SelectItem>
+            <SelectItem value="9">Septiembre</SelectItem>
+            <SelectItem value="10">Octubre</SelectItem>
+            <SelectItem value="11">Noviembre</SelectItem>
+            <SelectItem value="12">Diciembre</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -350,16 +365,47 @@ export default function BoardPage({
             <CardContent>
               <DonughtProgress
                 data={area.data}
-                onClickCell={(index) => {
-                  setIdexModal(index);
-                  setModalIsOpen(true);
-                }}
+                maxLength={dateInfo.maxDays}
                 title={area.name}
+                onClickCell={(day) => {
+                  // FIXME: QUE TONTO YO, No es pos indice, es por find. porque el inbdice estaria vien si estuvieran todos los datos del primer dia al ultimo
+                  // Pero no lo estan, solo estan los que si estan registrados, y no en orden. Asi que toca buscarlos
+
+                  const dayData = area.data.find((dat) => dat.day === day);
+
+                  setAreaModalInfo({
+                    dayIndex: day,
+                    areaId: area.id,
+                    name: area.name,
+                    kpiId: area.kpi.id,
+                    fields: area.kpi.fields,
+                  });
+
+                  updateKpiDayTrackForm.setValue("values", []);
+                  updateKpiDayTrackForm.setValue("diaInhabil", false);
+                  updateKpiDayTrackForm.setValue("day", day);
+
+                  updateKpiDayTrackForm.setValue("areaId", area.id);
+                  updateKpiDayTrackForm.setValue("kpiId", area.kpi.id);
+
+                  if (dayData) {
+                    updateKpiDayTrackForm.setValue(
+                      "values",
+                      dayData.fieldValues
+                    );
+
+                    if (dayData.status === "disabled") {
+                      updateKpiDayTrackForm.setValue("diaInhabil", true);
+                    }
+                  }
+
+                  setAreaModalIsOpen(true);
+                }}
               />
               <p className="text-center mt-2 text-muted-foreground">
-                {kpiList.find((kpi) => kpi.id === area.id)?.name}
+                {area.kpi.name}
               </p>
-              <div className="flex flex-row justify-around gap-4 md:gap-10 xl:gap-12 my-6 ">
+              {/* <div className="flex flex-row justify-around gap-4 md:gap-10 xl:gap-12 my-6 ">
                 {area.mainCauses.map((cause) => (
                   <div
                     key={"cause-" + cause.label}
@@ -376,7 +422,7 @@ export default function BoardPage({
                 ) : (
                   <></>
                 )}
-              </div>
+              </div> */}
               {/* <Alert className="">
                 <ListTodo className="h-4 w-4" />
                 <AlertTitle className="flex flex-row justify-between align-bottom items-baseline">
@@ -461,16 +507,16 @@ export default function BoardPage({
       </div>
       <Dialog
         onOpenChange={(val) => {
-          setModalIsOpen(val);
+          setAreaModalIsOpen(val);
         }}
-        open={modalIsOpen}
+        open={areaModalIsOpen}
       >
         <DialogContent className="z-50">
           <DialogHeader>
             <DialogTitle>
-              Security{" "}
+              {areaModalInfo?.name}
               <span className="text-sm pl-1 text-muted-foreground">
-                Dia {indexModal}
+                Dia {areaModalInfo?.dayIndex}
               </span>
             </DialogTitle>
             <Tabs defaultValue="kpi">
@@ -479,48 +525,63 @@ export default function BoardPage({
                 <TabsTrigger value="5w">5W</TabsTrigger>
               </TabsList>
               <TabsContent value="kpi">
-                <div className="space-y-6 mt-4">
-                  <div className="flex flex-col gap-2 items-start ">
-                    <Label htmlFor="campo1">Accidentes hoy</Label>
-                    <Input
-                      disabled={diaInhabil}
-                      type="number"
-                      id="campo1"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className=" flex flex-col gap-2 items-start">
-                    <Label htmlFor="campo2">Empleados hoy disponibles</Label>
-                    <Input
-                      disabled={diaInhabil}
-                      type="number"
-                      id="campo2"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 items-start">
-                    <Label htmlFor="campo3">Horas Totales Trabajadas hoy</Label>
-                    <Input
-                      disabled={diaInhabil}
-                      type="number"
-                      id="campo3"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="w-full flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        onCheckedChange={(val) => {
-                          setDiaIhabil(val);
-                        }}
-                        checked={diaInhabil}
-                        id="diainhabil"
+                <Form {...updateKpiDayTrackForm}>
+                  <form
+                    onSubmit={updateKpiDayTrackForm.handleSubmit(
+                      onSubmitUpdateKpiDayTrack
+                    )}
+                    className="space-y-2 mt-4"
+                  >
+                    {areaModalInfo?.fields.map((fieldMetric, indx) => (
+                      <FormField
+                        control={updateKpiDayTrackForm.control}
+                        name="values"
+                        render={({ field }) => (
+                          <FormItem key={"frm-fields-" + indx}>
+                            <FormLabel>{fieldMetric}</FormLabel>
+                            <FormControl>
+                              <Input
+                                onChange={(e) => {
+                                  e.preventDefault();
+                                  const val = e.target.value;
+                                  const newValues = [...field.value];
+                                  newValues[indx] = Number(val);
+                                  field.onChange(newValues);
+                                }}
+                                value={field.value[indx] || 0}
+                                defaultValue={
+                                  !field.value[indx] ? 0 : undefined
+                                }
+                                type="number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                      <Label htmlFor="diainhabil">Dia Inhabil</Label>
+                    ))}
+                    <div className="w-full flex items-center justify-between">
+                      <FormField
+                        control={updateKpiDayTrackForm.control}
+                        name="diaInhabil"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel>Dia Inhabil</FormLabel>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit">Guardar cambios</Button>
                     </div>
-                    <Button className="mt-4">Guardar cambios</Button>
-                  </div>
-                </div>
+                  </form>
+                </Form>
               </TabsContent>
               <TabsContent value="5w">
                 <div className="space-y-6 mt-4">

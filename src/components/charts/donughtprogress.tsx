@@ -12,7 +12,7 @@ import {
 enum COLORS {
   "fail" = "#fe0000",
   "success" = "#00C49F",
-  "midpoint" = "#FF8042",
+  "mid" = "#FF8042",
   "disabled" = "#71717a",
   "empty" = "#cbd5e1",
 }
@@ -57,26 +57,41 @@ const renderCustomizedLabel = ({
 
 type DonughtProgressProps = {
   data: {
-    label: string;
-    state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+    status: "success" | "fail" | "mid" | "disabled" | "empty" | null;
+    fieldValues: number[];
+    day: number;
   }[];
+  maxLength: number;
   title: string;
   onClickCell?: (index: number) => void;
 };
 export default function DonughtProgress({
   data,
   title,
+  maxLength,
   onClickCell,
 }: DonughtProgressProps) {
-  const tratatedData = data.map((entry) => {
-    return { label: entry.label, state: entry.state, value: 10 };
-  });
+  let finalData: {
+    label: string;
+    state: "success" | "fail" | "mid" | "disabled" | "empty";
+    value: number;
+  }[] = [];
+
+  for (let i = 0; i < maxLength; i++) {
+    const val = data.find((dayData) => i + 1 === dayData.day);
+    if (val) {
+      if (val.status == null) val.status = "empty";
+      finalData[i] = { label: "day " + val.day, state: val.status, value: 10 };
+    } else {
+      finalData[i] = { label: "day " + i + 1, state: "empty", value: 10 };
+    }
+  }
 
   return (
     <ResponsiveContainer width={"100%"} height={275}>
       <PieChart height={275}>
         <Pie
-          data={tratatedData}
+          data={finalData}
           labelLine={false}
           label={renderCustomizedLabel}
           innerRadius={55}
@@ -85,7 +100,7 @@ export default function DonughtProgress({
           paddingAngle={2}
           dataKey={"value"}
         >
-          {data.map((entry, index) => (
+          {finalData.map((entry, index) => (
             <Cell
               className="cursor-pointer"
               onClick={onClickCell ? () => onClickCell(index + 1) : undefined}

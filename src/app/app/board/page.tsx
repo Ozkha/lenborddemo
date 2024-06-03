@@ -2,8 +2,8 @@ import { auth } from "@/lib/auth";
 import BoardPage from "./clientpage";
 import { redirect, useSearchParams } from "next/navigation";
 import { db as database } from "@/db";
-import { areas, boards, kpis } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { areas, boards, kpiMetric_tracking, kpis } from "@/db/schema";
+import { asc, desc, sql } from "drizzle-orm";
 
 export default async function BooardPageSuspensed({ searchParams }: any) {
   const session = await auth();
@@ -25,9 +25,6 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
 
   const db = await database;
 
-  // TODO: Ahora sigue el board, y creo que despues el area
-  // o una combinacion de entre los 2
-
   const [boardInfo] = await db
     .select({
       id: boards.id,
@@ -40,69 +37,94 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     .select({
       id: kpis.id,
       name: kpis.name,
+      fields: kpis.fields,
     })
     .from(kpis);
 
-  const areaPerBoardList = await db
-    .select({ id: areas.id, name: areas.name, kpiId: areas.kpiId })
-    .from(areas)
-    .where(
-      sql`${areas.companyId}=${user.companyId} and ${areas.boardId}=${boardInfo.id}`
-    );
+  let year = searchParams.year;
+  let month = searchParams.month;
 
-  const areaPerBoardListAlter = areaPerBoardList.map((area) => {
-    return {
-      ...area,
-      mainCauses: [],
-      data: [
-        { label: "Dia 1", state: "fail" },
-        { label: "Dia 2", state: "success" },
-        { label: "Dia 3", state: "midpoint" },
-        { label: "Dia 4", state: "disabled" },
-        { label: "Dia 5", state: "success" },
-        { label: "Dia 6", state: "fail" },
-        { label: "Dia 7", state: "fail" },
-        { label: "Dia 8", state: "empty" },
-        { label: "Dia 9", state: "empty" },
-        { label: "Dia 10", state: "empty" },
-        { label: "Dia 11", state: "empty" },
-        { label: "Dia 12", state: "empty" },
-        { label: "Dia 13", state: "empty" },
-        { label: "Dia 14", state: "empty" },
-        { label: "Dia 15", state: "empty" },
-        { label: "Dia 16", state: "empty" },
-        { label: "Dia 17", state: "empty" },
-        { label: "Dia 18", state: "empty" },
-        { label: "Dia 19", state: "empty" },
-        { label: "Dia 20", state: "empty" },
-        { label: "Dia 21", state: "empty" },
-        { label: "Dia 22", state: "empty" },
-        { label: "Dia 23", state: "empty" },
-        { label: "Dia 24", state: "empty" },
-        { label: "Dia 25", state: "empty" },
-        { label: "Dia 26", state: "empty" },
-        { label: "Dia 27", state: "empty" },
-        { label: "Dia 28", state: "empty" },
-        { label: "Dia 29", state: "empty" },
-        { label: "Dia 30", state: "empty" },
-        { label: "Dia 31", state: "empty" },
-      ],
-    };
-  }) as {
+  if (!year) {
+    year = new Date().getFullYear();
+  }
+  if (!month) {
+    month = new Date().getMonth() + 1;
+  }
+
+  year = Number(year);
+  month = Number(month);
+
+  const areasPerBoardListLABUENA = await db
+    .select({
+      id: areas.id,
+      name: areas.name,
+      kpi: {
+        id: kpis.id,
+        name: kpis.name,
+        fields: kpis.fields,
+      },
+      data: {
+        day: sql<number>`day(${kpiMetric_tracking.date})`,
+        status: kpiMetric_tracking.status,
+        fieldValues: kpiMetric_tracking.fieldsValues,
+      },
+    })
+    .from(areas)
+    .innerJoin(kpis, sql`${areas.kpiId}=${kpis.id}`)
+    .leftJoin(
+      kpiMetric_tracking,
+      sql`${kpiMetric_tracking.areaId}=${areas.id} and ${kpiMetric_tracking.kpiId}=${areas.kpiId} and month(${kpiMetric_tracking.date}) = ${month} and year(${kpiMetric_tracking.date}) = ${year}`
+    )
+    .orderBy(asc(kpiMetric_tracking.date));
+
+  const areaList: {
     id: number;
     name: string;
-    kpiId: number;
-    mainCauses: { label: string; weight: number }[];
+    kpi: {
+      id: number;
+      name: string;
+      fields: string[];
+    };
     data: {
-      label: string;
-      state: "fail" | "success" | "midpoint" | "disabled" | "empty";
+      status: "success" | "fail" | "mid" | "disabled" | "empty" | null;
+      fieldValues: number[];
+      day: number;
     }[];
-  }[];
+  }[] = Object.values(
+    areasPerBoardListLABUENA.reduce((acc, current) => {
+      // @ts-ignore
+      if (!acc[current.id]) {
+        // @ts-ignore
+        acc[current.id] = {
+          ...current,
+          data: current.data ? [current.data] : [],
+        };
+      } else {
+        if (current.data) {
+          //@ts-ignore
+          acc[current.id].data.push(current.data);
+        }
+      }
+      return acc;
+    }, {})
+  );
+
+  // console.log("Usando el output ya ordenado:");
+  // console.log(areaList);
+  // console.log("Detallado [1]:");
+  // console.log(areaList[1]);
+
+  // TODO: Talvez mas despues hacer con server component o delayed component el boton para agregar mas areas
+
+  // TODO: Que sea funciona el KPI-Tracking
+  // -- Veo especial dificultad en el uso de la metrica para establecer un resultado
+  // -- Si no se ah rellenado nada o no se ah establecido un valor para ese dia, entonces dar como empty. (No se si agregar una opcion para que sea reversible)
 
   return (
     <>
       <BoardPage
-        areaList={areaPerBoardListAlter}
+        dateInfo={{ month, year, maxDays: new Date(year, month, 0).getDate() }}
+        areaList={areaList}
         kpiList={kpiList}
         boardInfo={boardInfo}
         user={user}

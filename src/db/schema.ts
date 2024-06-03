@@ -87,8 +87,32 @@ export const areas = mysqlTable("areas", {
   companyId: bigint("company_id", { unsigned: true, mode: "number" })
     .references(() => comapnies.id)
     .notNull(),
+  // TODO: EL kpi de estas areas no puede ser cambiado. -- Ocurriria un error si es el caso.
   kpiId: bigint("kpi_id", { unsigned: true, mode: "number" })
     .references(() => kpis.id)
+    .notNull(),
+});
+
+export const kpiMetric_tracking = mysqlTable("kpi_tracking", {
+  id: serial("id").primaryKey(),
+  date: timestamp("date", { fsp: 2, mode: "date" }).notNull(),
+  areaId: bigint("area_id", { unsigned: true, mode: "number" })
+    .references(() => areas.id)
+    .notNull(),
+  kpiId: bigint("kpi_id", { unsigned: true, mode: "number" })
+    .references(() => kpis.id)
+    .notNull(),
+  kpiGoalId: bigint("kpigoal_id", { unsigned: true, mode: "number" })
+    .references(() => kpiGoals.id)
+    .notNull(),
+  //Proveniente del kpi-goal:
+  status: mysqlEnum("status", ["disabled", "empty", "success", "fail", "mid"]),
+  // Proveniente del metric del kpi:
+  value: bigint("value", { mode: "number" }),
+  fieldsValues: json("values").$type<number[]>().notNull(),
+
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
     .notNull(),
 });
 
@@ -101,12 +125,3 @@ export const areas = mysqlTable("areas", {
 // - who (Reference to user_id, or entity)
 // - when (default now, but the user can select, but moving around calendar, not direcnlty on dump)
 // - why (cause?)
-
-// Area - kpi_tracking
-// - id
-// - fecha
-// - board_id (nose)
-// - kpi_id
-// - values
-// - area_id
-// - compny_id
