@@ -46,65 +46,10 @@ import { addAreaInBoard } from "@/actions/addArea";
 import { date, year } from "drizzle-orm/mysql-core";
 import { setKpiTrackingDayValue } from "@/actions/setKpiTackingDayValue";
 import { useRouter } from "next/navigation";
-
-const lugares = [
-  {
-    value: "almacen",
-    label: "Almacen",
-  },
-  {
-    value: "nave_a",
-    label: "Nave A",
-  },
-  {
-    value: "nave_b",
-    label: "Nave B",
-  },
-  {
-    value: "oficina_a",
-    label: "Oficina A",
-  },
-  {
-    value: "maquinaras",
-    label: "Mquinareas",
-  },
-];
-const personas = [
-  {
-    value: "sofia_mendez",
-    label: "Sofia Mendez",
-  },
-  {
-    value: "Jose Ramirez",
-    label: "Jose Ramirez",
-  },
-  {
-    value: "Antonio Guzamn",
-    label: "Antonio Guzman",
-  },
-];
-const causas = [
-  {
-    value: "hombro izquerido",
-    label: "Hombro Izquierdo",
-  },
-  {
-    value: "mano derecha",
-    label: "Mano Derecha",
-  },
-  {
-    value: "Mano Izquierda",
-    label: "Mano Izquierda",
-  },
-  {
-    value: "Cabeza",
-    label: "Cabeza",
-  },
-  {
-    value: "Hombro derecho",
-    label: "Hombro Derecho",
-  },
-];
+import { addWhere } from "@/actions/addWhere";
+import { addWho } from "@/actions/addWho";
+import { addWhy } from "@/actions/addWhy";
+import { create5wDump } from "@/actions/create5wDump";
 
 type ClientBoardPageProps = {
   user: any;
@@ -129,6 +74,9 @@ type ClientBoardPageProps = {
       day: number;
     }[];
   }[];
+  whereList: { value: number; label: string }[];
+  whoList: { value: number; label: string }[];
+  whyList: { value: number; label: string }[];
 };
 
 const boardNameFormSchema = z.object({
@@ -150,12 +98,25 @@ const updateKpiDayTrackFormSchema = z.object({
   kpiId: z.number(),
 });
 
+const addNew5WhysEntrySchema = z.object({
+  when: z.date({ message: "Es necesaria una fecha" }),
+  what: z.string({ message: "Es necesario un 'que'" }),
+  whereId: z.number({ message: "Es neceario un donde" }),
+  whoId: z.number({ message: "Es necesario un quien" }),
+  whyId: z.number({ message: "Es necesario un porque  o causa" }),
+  whyDetails: z.string().optional(),
+  areaId: z.number(),
+});
+
 export default function BoardPage({
   user,
   boardInfo,
   kpiList,
   dateInfo,
   areaList,
+  whereList,
+  whoList,
+  whyList,
 }: ClientBoardPageProps) {
   const router = useRouter();
   const boardNameForm = useForm<z.infer<typeof boardNameFormSchema>>({
@@ -231,15 +192,12 @@ export default function BoardPage({
   function onSubmitUpdateKpiDayTrack(
     values: z.infer<typeof updateKpiDayTrackFormSchema>
   ) {
-    // TODO: Aqui ando, Ahora si que pase lo bueno
     const fecha = new Date(values.year, values.month - 1, values.day);
     const ahora = new Date();
     fecha.setHours(ahora.getHours());
     fecha.setMinutes(ahora.getMinutes());
     fecha.setSeconds(ahora.getSeconds());
     fecha.setMilliseconds(ahora.getMilliseconds());
-
-    console.log("🚀 ", values);
 
     try {
       setKpiTrackingDayValue({
@@ -259,16 +217,44 @@ export default function BoardPage({
     }
   }
 
-  const setTextSizeByCauseWeight = (weight: number) => {
-    if (weight < 15) return "text-[15px]";
-    if (weight < 17) return "text-[17px]";
-    if (weight < 19) return "text-[19px]";
-    if (weight < 21) return "text-[21px] font-semibold";
-    if (weight < 23) return "text-[23px] font-semibold";
-    if (weight < 25) return "text-[25px] font-semibold";
-    if (weight < 27) return "text-[27px] font-semibold";
-    if (weight <= 29) return "text-[29px] font-semibold";
-  };
+  const addNew5WhysEntryForm = useForm<z.infer<typeof addNew5WhysEntrySchema>>({
+    resolver: zodResolver(addNew5WhysEntrySchema),
+  });
+
+  function onSubmitAddNew5WhysEntry(
+    values: z.infer<typeof addNew5WhysEntrySchema>
+  ) {
+    try {
+      create5wDump({
+        date: values.when,
+        what: values.what,
+        whereId: values.whereId,
+        whoId: values.whoId,
+        whyId: values.whyId,
+        whyDetails: values.whyDetails,
+        areaId: values.areaId,
+        companyId: user.companyId,
+      });
+      addNew5WhysEntryForm.reset();
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible registrar el 5w",
+      });
+    }
+  }
+
+  // const setTextSizeByCauseWeight = (weight: number) => {
+  //   if (weight < 15) return "text-[15px]";
+  //   if (weight < 17) return "text-[17px]";
+  //   if (weight < 19) return "text-[19px]";
+  //   if (weight < 21) return "text-[21px] font-semibold";
+  //   if (weight < 23) return "text-[23px] font-semibold";
+  //   if (weight < 25) return "text-[25px] font-semibold";
+  //   if (weight < 27) return "text-[27px] font-semibold";
+  //   if (weight <= 29) return "text-[29px] font-semibold";
+  // };
 
   // DEL MODAL de KPI y dump info:
   const [areaModalIsOpen, setAreaModalIsOpen] = useState(false);
@@ -279,12 +265,11 @@ export default function BoardPage({
     kpiId: number;
     fields: string[];
   }>();
-  const [diaInhabil, setDiaIhabil] = useState(false);
 
-  // Form del 5W
-  const [whereValue, setWhereValue] = useState("");
-  const [whoValue, setWhoValue] = useState("");
-  const [whyValue, setWhyValue] = useState("");
+  // Los 5w
+  const [wheresList, setWheresList] = useState(whereList);
+  const [whosList, setWhosList] = useState(whoList);
+  const [whysList, setWhysList] = useState(whyList);
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -368,9 +353,6 @@ export default function BoardPage({
                 maxLength={dateInfo.maxDays}
                 title={area.name}
                 onClickCell={(day) => {
-                  // FIXME: QUE TONTO YO, No es pos indice, es por find. porque el inbdice estaria vien si estuvieran todos los datos del primer dia al ultimo
-                  // Pero no lo estan, solo estan los que si estan registrados, y no en orden. Asi que toca buscarlos
-
                   const dayData = area.data.find((dat) => dat.day === day);
 
                   setAreaModalInfo({
@@ -387,6 +369,20 @@ export default function BoardPage({
 
                   updateKpiDayTrackForm.setValue("areaId", area.id);
                   updateKpiDayTrackForm.setValue("kpiId", area.kpi.id);
+
+                  addNew5WhysEntryForm.setValue("areaId", area.id);
+
+                  const fecha = new Date(
+                    dateInfo.year,
+                    dateInfo.month - 1,
+                    day
+                  );
+                  const ahora = new Date();
+                  fecha.setHours(ahora.getHours());
+                  fecha.setMinutes(ahora.getMinutes());
+                  fecha.setSeconds(ahora.getSeconds());
+                  fecha.setMilliseconds(ahora.getMilliseconds());
+                  addNew5WhysEntryForm.setValue("when", fecha);
 
                   if (dayData) {
                     updateKpiDayTrackForm.setValue(
@@ -437,9 +433,11 @@ export default function BoardPage({
         ))}
 
         <Dialog>
-          <DialogTrigger className="p=16">
-            <Plus className="h-5 w-5 mr-2"></Plus>
-            Agregar KPI area
+          <DialogTrigger className="p-16">
+            <div className="flex">
+              <Plus className="h-5 w-5 mr-2"></Plus>
+              Agregar KPI area
+            </div>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -584,66 +582,189 @@ export default function BoardPage({
                 </Form>
               </TabsContent>
               <TabsContent value="5w">
-                <div className="space-y-6 mt-4">
-                  <div className="flex flex-col gap-2 items-start ">
-                    <Label htmlFor="campo1">Que?</Label>
-                    <Input
-                      required
-                      type="text"
-                      id="campo1"
-                      placeholder="Lo que paso fue..."
+                <Form {...addNew5WhysEntryForm}>
+                  <form
+                    className="space-y-4 mt-4"
+                    onSubmit={addNew5WhysEntryForm.handleSubmit(
+                      onSubmitAddNew5WhysEntry
+                    )}
+                  >
+                    <FormField
+                      control={addNew5WhysEntryForm.control}
+                      name="what"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Que?</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Lo que paso fue... / Pequeña descripcion"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="flex flex-col gap-2 items-start">
-                    <Label>Donde?</Label>
-                    <Combobox
-                      data={lugares}
-                      value={whereValue}
-                      setValue={setWhereValue}
-                      placeholder="Selecciona lugar..."
-                      placeholderOnSearch="Lugar..."
-                      emptyNode={
-                        <Button variant={"ghost"} className="w-[80%]">
-                          Agregar Opcion
-                        </Button>
-                      }
-                    ></Combobox>
-                  </div>
-                  <div className="flex flex-col gap-2 items-start">
-                    <Label>Quien?</Label>
-                    <Combobox
-                      data={personas}
-                      value={whoValue}
-                      setValue={setWhoValue}
-                      placeholder="Selecciona persona..."
-                      placeholderOnSearch="persona..."
-                      emptyNode={
-                        <Button variant={"ghost"} className="w-[80%]">
-                          Agregar Opcion
-                        </Button>
-                      }
-                    ></Combobox>
-                  </div>
-                  <div className="flex flex-col gap-2 items-start">
-                    <Label htmlFor="campo4">Porque? / Causa</Label>
-                    <Combobox
-                      data={causas}
-                      value={whyValue}
-                      setValue={setWhyValue}
-                      placeholder="Selecciona causa..."
-                      placeholderOnSearch="causa..."
-                      emptyNode={
-                        <Button variant={"ghost"} className="w-[80%]">
-                          Agregar Opcion
-                        </Button>
-                      }
-                    ></Combobox>
-                    <Textarea placeholder="detalles o descripcion..."></Textarea>
-                  </div>
-                  <div className="w-full flex justify-end">
-                    <Button className="mt-4">Añadir registro</Button>
-                  </div>
-                </div>
+
+                    <FormField
+                      control={addNew5WhysEntryForm.control}
+                      name="whereId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Donde?</FormLabel>
+                          <FormControl>
+                            <Combobox
+                              data={wheresList}
+                              value={
+                                field.value ? field.value.toString() : undefined
+                              }
+                              onSelect={(val) => {
+                                addNew5WhysEntryForm.setValue(
+                                  "whereId",
+                                  Number(val)
+                                );
+                              }}
+                              placeholder="Selecciona lugar..."
+                              placeholderOnSearch="Agregar lugar..."
+                              emptyNode={(val) => (
+                                <Button
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    try {
+                                      const newWhereId = await addWhere({
+                                        label: val,
+                                        companyId: user.companyId,
+                                      });
+                                      setWheresList([
+                                        ...wheresList,
+                                        { value: newWhereId, label: val },
+                                      ]);
+                                    } catch (e) {}
+                                  }}
+                                  variant={"ghost"}
+                                >
+                                  Agregar como opcion
+                                </Button>
+                              )}
+                            ></Combobox>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={addNew5WhysEntryForm.control}
+                      name="whoId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quien?</FormLabel>
+                          <FormControl>
+                            <Combobox
+                              data={whosList}
+                              value={
+                                field.value ? field.value.toString() : undefined
+                              }
+                              onSelect={(val) => {
+                                addNew5WhysEntryForm.setValue(
+                                  "whoId",
+                                  Number(val)
+                                );
+                              }}
+                              placeholder="Selecciona persona..."
+                              placeholderOnSearch="Agregar persona..."
+                              emptyNode={(val) => (
+                                <Button
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    try {
+                                      const newWhoId = await addWho({
+                                        label: val,
+                                        companyId: user.companyId,
+                                      });
+                                      setWhosList([
+                                        ...whosList,
+                                        { value: newWhoId, label: val },
+                                      ]);
+                                    } catch (e) {}
+                                  }}
+                                  variant={"ghost"}
+                                >
+                                  Agregar como opcion
+                                </Button>
+                              )}
+                            ></Combobox>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={addNew5WhysEntryForm.control}
+                      name="whyId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Porque? / Causa</FormLabel>
+                          <FormControl>
+                            <Combobox
+                              data={whysList}
+                              value={
+                                field.value ? field.value.toString() : undefined
+                              }
+                              onSelect={(val) => {
+                                addNew5WhysEntryForm.setValue(
+                                  "whyId",
+                                  Number(val)
+                                );
+                              }}
+                              placeholder="Selecciona lugar..."
+                              placeholderOnSearch="Agregar porque..."
+                              emptyNode={(val) => (
+                                <Button
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    try {
+                                      const newWhyId = await addWhy({
+                                        label: val,
+                                        companyId: user.companyId,
+                                      });
+                                      setWhysList([
+                                        ...whysList,
+                                        { value: newWhyId, label: val },
+                                      ]);
+                                    } catch (e) {}
+                                  }}
+                                  variant={"ghost"}
+                                >
+                                  Agregar como opcion
+                                </Button>
+                              )}
+                            ></Combobox>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={addNew5WhysEntryForm.control}
+                      name="whyDetails"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Lo que paso fue... / Pequeña descripcion"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="mt-4">
+                      Añadir registro
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </DialogHeader>

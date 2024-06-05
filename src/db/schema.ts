@@ -116,12 +116,48 @@ export const kpiMetric_tracking = mysqlTable("kpi_tracking", {
     .notNull(),
 });
 
-// Area -5whys -- Creo que no estan directamenre relacionados con un KPI
-// - id
-// - area_id
-// - conpany_id
-// - what
-// - where (list of places that can be added on the act)
-// - who (Reference to user_id, or entity)
-// - when (default now, but the user can select, but moving around calendar, not direcnlty on dump)
-// - why (cause?)
+export const wheres = mysqlTable("wheres", {
+  id: serial("id").primaryKey(),
+  label: varchar("label", { length: 255 }).notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
+
+export const whys = mysqlTable("whys", {
+  id: serial("id").primaryKey(),
+  label: varchar("label", { length: 255 }).notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
+
+export const whos = mysqlTable("whos", {
+  id: serial("id").primaryKey(),
+  label: varchar("label", { length: 255 }).notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
+
+export const fiveWhys = mysqlTable("five_whys", {
+  id: serial("id").primaryKey(),
+  date: timestamp("date", { fsp: 2, mode: "date" }).notNull(),
+  what: varchar("what", { length: 255 }).notNull(),
+  whereId: bigint("where_id", { unsigned: true, mode: "number" })
+    .references(() => wheres.id)
+    .notNull(),
+  whoId: bigint("who_id", { unsigned: true, mode: "number" })
+    .references(() => whys.id)
+    .notNull(),
+  whyId: bigint("why_id", { unsigned: true, mode: "number" })
+    .references(() => whys.id)
+    .notNull(),
+  whyDetails: varchar("why_details", { length: 1500 }),
+  areaId: bigint("area_id", { unsigned: true, mode: "number" })
+    .references(() => areas.id)
+    .notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});

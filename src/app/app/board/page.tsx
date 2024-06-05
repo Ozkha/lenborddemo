@@ -2,7 +2,15 @@ import { auth } from "@/lib/auth";
 import BoardPage from "./clientpage";
 import { redirect, useSearchParams } from "next/navigation";
 import { db as database } from "@/db";
-import { areas, boards, kpiMetric_tracking, kpis } from "@/db/schema";
+import {
+  areas,
+  boards,
+  kpiMetric_tracking,
+  kpis,
+  wheres,
+  whos,
+  whys,
+} from "@/db/schema";
 import { asc, desc, sql } from "drizzle-orm";
 
 export default async function BooardPageSuspensed({ searchParams }: any) {
@@ -116,13 +124,36 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
 
   // TODO: Talvez mas despues hacer con server component o delayed component el boton para agregar mas areas
 
-  // TODO: Que sea funciona el KPI-Tracking
-  // -- Veo especial dificultad en el uso de la metrica para establecer un resultado
-  // -- Si no se ah rellenado nada o no se ah establecido un valor para ese dia, entonces dar como empty. (No se si agregar una opcion para que sea reversible)
+  const wheresList = await db
+    .select({
+      value: wheres.id,
+      label: wheres.label,
+    })
+    .from(wheres)
+    .where(sql`${wheres.companyId}=${user.companyId}`);
+
+  const whosList = await db
+    .select({
+      value: whos.id,
+      label: whos.label,
+    })
+    .from(whos)
+    .where(sql`${whos.companyId}=${user.companyId}`);
+
+  const whysList = await db
+    .select({
+      value: whys.id,
+      label: whys.label,
+    })
+    .from(whys)
+    .where(sql`${whys.companyId}=${user.companyId}`);
 
   return (
     <>
       <BoardPage
+        whereList={wheresList}
+        whoList={whosList}
+        whyList={whysList}
         dateInfo={{ month, year, maxDays: new Date(year, month, 0).getDate() }}
         areaList={areaList}
         kpiList={kpiList}

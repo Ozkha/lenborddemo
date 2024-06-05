@@ -30,10 +30,10 @@ type ComboboxProps = {
   placeholder?: string;
   placeholderOnSearch?: string;
   emptyLabel?: string;
-  emptyNode?: React.ReactNode;
-  data: { value: string; label: string }[];
-  value: string;
-  setValue: Dispatch<SetStateAction<string>>;
+  emptyNode?: (val: string) => React.ReactNode;
+  data: { value: string | number; label: string }[];
+  value?: string;
+  onSelect: (value: string) => void;
 };
 export function Combobox({
   placeholder,
@@ -42,10 +42,10 @@ export function Combobox({
   emptyNode,
   data,
   value,
-  setValue,
+  onSelect,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
-  //   const [value, setValue] = useState("");
+  const [searchVal, setSearchVal] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,35 +56,49 @@ export function Combobox({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value ? data.find((val) => val.value === value)?.label : placeholder}
+          {value
+            ? data.find((val) => val.value.toString() === value)?.label
+            : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">
         <Command>
-          <CommandInput placeholder={placeholderOnSearch} />
+          {/* TODO: AQUIII- Oner caundo on change o asi */}
+          <CommandInput
+            value={searchVal}
+            onValueChange={(val) => {
+              setSearchVal(val);
+            }}
+            placeholder={placeholderOnSearch}
+          />
           <CommandList>
-            {/* TODO: Poder meter elementos */}
-            <CommandEmpty>{emptyNode ? emptyNode : emptyLabel}</CommandEmpty>
+            <CommandEmpty>
+              {emptyNode ? emptyNode(searchVal) : emptyLabel}
+            </CommandEmpty>
             <CommandGroup>
-              {data.map((val) => (
-                <CommandItem
-                  key={val.value}
-                  value={val.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === val.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {val.label}
-                </CommandItem>
-              ))}
+              {data && data.length > 0 ? (
+                data.map((val) => (
+                  <CommandItem
+                    key={val.value}
+                    value={val.value.toString()}
+                    onSelect={(currentValue) => {
+                      onSelect(currentValue === value ? "" : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === val.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {val.label}
+                  </CommandItem>
+                ))
+              ) : (
+                <></>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
