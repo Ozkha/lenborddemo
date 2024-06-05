@@ -341,7 +341,7 @@ export default function BoardPage({
         {areaList.map((area) => (
           <Card key={"area-" + area.id}>
             <CardHeader className="pb-0">
-              <Link href={"/app/area?area='eso123'"}>
+              <Link href={"/app/area?area=" + area.id}>
                 <Button className="w-fit p-0" variant={"ghost"}>
                   <BookUp className="w-5 h-5 text-muted-foreground" />
                 </Button>
