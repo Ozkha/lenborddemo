@@ -24,10 +24,10 @@ export function Tracker({ data, className }: TrackerProps) {
           <Tooltip key={"tracker-" + index}>
             <TooltipTrigger asChild>
               <div
-                className={cn([
-                  "w-full h-full rounded-[1px] first:rounded-l-[4px] last:rounded-r-[4px]",
-                  val.color,
-                ])}
+                className="w-full h-full rounded-[1px] first:rounded-l-[4px] last:rounded-r-[4px]"
+                style={{
+                  backgroundColor: val.color,
+                }}
               />
             </TooltipTrigger>
             <TooltipContent>
