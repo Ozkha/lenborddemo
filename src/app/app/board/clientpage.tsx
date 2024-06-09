@@ -235,7 +235,14 @@ export default function BoardPage({
         areaId: values.areaId,
         companyId: user.companyId,
       });
-      addNew5WhysEntryForm.reset();
+      addNew5WhysEntryForm.resetField("what");
+      addNew5WhysEntryForm.setValue("what", "");
+
+      addNew5WhysEntryForm.resetField("whereId");
+      addNew5WhysEntryForm.resetField("whoId");
+      addNew5WhysEntryForm.resetField("whyId");
+      addNew5WhysEntryForm.resetField("whyDetails");
+      addNew5WhysEntryForm.setValue("whyDetails", "");
     } catch (e) {
       toast({
         variant: "destructive",
@@ -765,6 +772,14 @@ export default function BoardPage({
                     </Button>
                   </form>
                 </Form>
+                <Button
+                  onClick={() => {
+                    console.log(addNew5WhysEntryForm.formState.errors);
+                  }}
+                  className="mt-4"
+                >
+                  Mostrar error
+                </Button>
               </TabsContent>
             </Tabs>
           </DialogHeader>
