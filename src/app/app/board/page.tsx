@@ -47,7 +47,8 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
       name: kpis.name,
       fields: kpis.fields,
     })
-    .from(kpis);
+    .from(kpis)
+    .where(sql`${kpis.companyId}=${user.companyId}`);
 
   let year = searchParams.year;
   let month = searchParams.month;
@@ -78,7 +79,10 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
       },
     })
     .from(areas)
-    .innerJoin(kpis, sql`${areas.kpiId}=${kpis.id}`)
+    .innerJoin(
+      kpis,
+      sql`${areas.kpiId}=${kpis.id} and ${areas.companyId}=${user.companyId}`
+    )
     .leftJoin(
       kpiMetric_tracking,
       sql`${kpiMetric_tracking.areaId}=${areas.id} and ${kpiMetric_tracking.kpiId}=${areas.kpiId} and month(${kpiMetric_tracking.date}) = ${month} and year(${kpiMetric_tracking.date}) = ${year}`
