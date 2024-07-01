@@ -69,9 +69,6 @@ export default async function BooardPageSuspensed() {
     }[];
   }[];
 
-  console.log("Aqui ta:");
-  console.log(finalCreo);
-
   return (
     <>
       <KpisPage kpiList={finalCreo} user={user}></KpisPage>
