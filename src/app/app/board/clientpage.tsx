@@ -772,14 +772,14 @@ export default function BoardPage({
                     </Button>
                   </form>
                 </Form>
-                <Button
+                {/* <Button
                   onClick={() => {
                     console.log(addNew5WhysEntryForm.formState.errors);
                   }}
                   className="mt-4"
                 >
                   Mostrar error
-                </Button>
+                </Button> */}
               </TabsContent>
             </Tabs>
           </DialogHeader>
