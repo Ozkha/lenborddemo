@@ -54,6 +54,7 @@ export default async function BooardPageSuspensed() {
       goal: subb.goal,
     })
     .from(kpis)
+    .where(sql`${kpis.companyId}=${user.companyId}`)
     .leftJoin(subb, sql`${kpis.id}=${subb.kpi_id}`)) as {
     id: number;
     name: string;
@@ -67,6 +68,9 @@ export default async function BooardPageSuspensed() {
       amount: number;
     }[];
   }[];
+
+  console.log("Aqui ta:");
+  console.log(finalCreo);
 
   return (
     <>
