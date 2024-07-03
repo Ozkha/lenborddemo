@@ -8,6 +8,8 @@ import {
   fiveWhys,
   kpiMetric_tracking,
   kpis,
+  wheres,
+  whos,
   whys,
 } from "@/db/schema";
 import { asc, count, desc, sql } from "drizzle-orm";
@@ -148,7 +150,6 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       return acc;
     }, {})
   );
-
   const [areaInfo] = await db
     .select({
       id: areas.id,
@@ -161,7 +162,8 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       },
     })
     .from(areas)
-    .rightJoin(boards, sql`${areas.boardId}=${boards.id}`)
+    .where(sql`${areas.id}=${areaId}`)
+    .leftJoin(boards, sql`${areas.boardId}=${boards.id}`)
     .leftJoin(kpis, sql`${areas.kpiId}=${kpis.id}`)
     .limit(1);
 
@@ -176,8 +178,6 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     };
   };
 
-  // TODO: Aqui-- ver como hacere para que el causes cumpla
-  //con el data type de areaPage que quiero.
   const causes = await db
     .select({
       id: fiveWhys.whyId,
@@ -192,10 +192,35 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     .groupBy(fiveWhys.whyId)
     .orderBy(desc(sql`frecuency`));
 
+  const [maxFiveWhyDumps] = await db
+    .select({ val: count() })
+    .from(fiveWhys)
+    .where(sql`${fiveWhys.areaId}=${areaId}`);
+
+  const [firstfiveDump] = await db
+    .select({
+      date: fiveWhys.date,
+      what: fiveWhys.what,
+      where: wheres.label,
+      who: whos.label,
+      why: whys.label,
+      whyDetails: fiveWhys.whyDetails,
+    })
+    .from(fiveWhys)
+    .where(sql`${fiveWhys.areaId}=${areaId}`)
+    .limit(1)
+    .leftJoin(wheres, sql`${wheres.id}=${fiveWhys.whereId}`)
+    .leftJoin(whos, sql`${whos.id}=${fiveWhys.whoId}`)
+    .leftJoin(whys, sql`${whys.id}=${fiveWhys.whyId}`);
+
+  // TODO: Muestra el nombre del area Incorrecto.
+
   return (
     <>
       <AreaPage
         areaInfo={areaInfo as unknown as boardInfoT}
+        maxfivedumps={maxFiveWhyDumps.val}
+        fivewhysFirstDump={firstfiveDump || undefined}
         areaCurrentDateData={{
           ...areaThisMonthYearData[0],
           maxDays: thisMonthMaxDays,

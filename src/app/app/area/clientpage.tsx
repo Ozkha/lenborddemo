@@ -1,5 +1,6 @@
 "use client";
 
+import { get5wdump } from "@/actions/get5wdump";
 import { DatePickerRange } from "@/components/ui-compounded/daterangepicker";
 import MonthPicker from "@/components/ui-compounded/monthpicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
@@ -121,6 +122,7 @@ const data = [
 
 type AreaPageProps = {
   user: any;
+  maxfivedumps: number;
   areaInfo: {
     id: number;
     name: number;
@@ -154,6 +156,16 @@ type AreaPageProps = {
     name: string;
     frecuency: number;
   }[];
+  fivewhysFirstDump:
+    | {
+        date: Date;
+        what: string;
+        where: string | null;
+        who: string | null;
+        why: string | null;
+        whyDetails: string | null;
+      }
+    | undefined;
 };
 
 export default function AreaPage({
@@ -162,18 +174,13 @@ export default function AreaPage({
   areaSelectedDateData,
   causes,
   areaInfo,
+  maxfivedumps,
+  fivewhysFirstDump,
 }: AreaPageProps) {
   const router = useRouter();
 
-  const [date, setDate] = useState({
-    from: new Date(2022, 0, 20),
-    to: addDays(new Date(2022, 0, 20), 20),
-  });
-
-  const [dateA, setDateA] = useState<Date>();
-
-  const [w5Page, setW5Page] = useState(1);
-
+  const [w5Page, setW5Page] = useState(0);
+  const [current5why, setCurrent5Why] = useState(fivewhysFirstDump);
   if (areaInfo.id == null) {
     return (
       <main className="p-4 sm:px-6 sm:py-0">
@@ -225,7 +232,6 @@ export default function AreaPage({
                 datee.getFullYear() +
                 "&month=" +
                 (datee.getMonth() + 1);
-              console.log(newUrl);
               router.replace(newUrl);
             }}
           />
@@ -309,11 +315,11 @@ export default function AreaPage({
                   </CardContent>
                 </Card>
               </div>
-              {/* TODO: Aqui--- Ahora sigue esto */}
               <Card>
                 <CardHeader className="px-7">
                   <CardTitle className="flex items-center justify-between">
                     <p>Causas</p>
+                    {/* TODO: Cuando sigua las tasks */}
                     {/* <Dialog>
                       <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                         <SquareCheck className="w-4 h-4 mr-1" />
@@ -418,28 +424,34 @@ export default function AreaPage({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col md:flex-row md:gap-4">
-                  <ResponsiveContainer
-                    className="p-0 m-0 min-h-60 md:min-h-96"
-                    width="100%"
-                    height="100%"
-                  >
-                    <BarChart width={150} height={40} data={causes}>
-                      <XAxis
-                        dataKey="name"
-                        stroke="#888888"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <Tooltip />
-                      <Bar
-                        dataKey="frecuency"
-                        fill="currentColor"
-                        radius={[4, 4, 0, 0]}
-                        className="fill-primary"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {causes.length > 0 ? (
+                    <ResponsiveContainer
+                      className="p-0 m-0 min-h-60 md:min-h-96"
+                      width="100%"
+                      height="100%"
+                    >
+                      <BarChart width={150} height={40} data={causes}>
+                        <XAxis
+                          dataKey="name"
+                          stroke="#888888"
+                          fontSize={12}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip />
+                        <Bar
+                          dataKey="frecuency"
+                          fill="currentColor"
+                          radius={[4, 4, 0, 0]}
+                          className="fill-primary"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="text-muted-foreground">
+                      No se han ingresado causas para ser graficadas
+                    </div>
+                  )}
                   <Separator
                     className="hidden md:inline-block"
                     orientation="vertical"
@@ -466,9 +478,13 @@ export default function AreaPage({
                     </ul>
                     <Dialog>
                       <DialogTrigger className="w-full">
-                        <div className="mt-4 text-sm font-medium">
-                          Mostrar Mas
-                        </div>
+                        {causes.length > 0 ? (
+                          <div className="mt-4 text-sm font-medium">
+                            Mostrar Mas
+                          </div>
+                        ) : (
+                          <></>
+                        )}
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
@@ -503,96 +519,122 @@ export default function AreaPage({
                 </CardContent>
               </Card>
             </div>
-            {/* <div>
+            <div>
               <Card className="overflow-hidden">
                 <CardHeader className="flex flex-row items-start bg-muted/50">
                   <div className="grid gap-0.5">
                     <CardTitle className="group flex items-center gap-2 text-lg">
                       5W
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        <Copy className="h-3 w-3" />
-                        <span className="sr-only">Copy Order ID</span>
-                      </Button>
                     </CardTitle>
-                    <CardDescription>
-                      <span className="text-xs text-muted-foreground">
-                        <span>#2 - </span>
-                        <time dateTime="2023-11-23">November 23, 2023</time>
-                      </span>
+                    <CardDescription className="text-xs text-muted-foreground">
+                      {current5why
+                        ? current5why.date.toLocaleDateString("es-MX", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "Vacio"}
                     </CardDescription>
                   </div>
                   <div className="ml-auto flex items-center gap-1">
-                    <p className="mr-4 text-sm">{w5Page} / 4</p>
-                    <Pagination className="ml-auto mr-0 w-auto">
-                      <PaginationContent>
-                        <PaginationItem>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() => {
-                              setW5Page(w5Page - 1);
-                            }}
-                          >
-                            <ChevronLeft className="h-3.5 w-3.5" />
-                            <span className="sr-only">Previous Order</span>
-                          </Button>
-                        </PaginationItem>
-                        <PaginationItem>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-6 w-6"
-                            onClick={() => {
-                              setW5Page(w5Page + 1);
-                            }}
-                          >
-                            <ChevronRight className="h-3.5 w-3.5" />
-                            <span className="sr-only">Next Order</span>
-                          </Button>
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+                    <p className="mr-4 text-sm">
+                      {w5Page + 1} / {maxfivedumps}
+                    </p>
+                    {current5why ? (
+                      <Pagination className="ml-auto mr-0 w-auto">
+                        <PaginationContent>
+                          <PaginationItem>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6"
+                              onClick={async () => {
+                                if (w5Page - 1 < 0) {
+                                } else {
+                                  const dumps = await get5wdump(
+                                    w5Page - 1,
+                                    areaInfo.id
+                                  );
+                                  if (dumps) {
+                                    setCurrent5Why(dumps[0]);
+                                  }
+                                  setW5Page(w5Page - 1);
+                                }
+                              }}
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                              <span className="sr-only">Previous Order</span>
+                            </Button>
+                          </PaginationItem>
+                          <PaginationItem>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6"
+                              onClick={async () => {
+                                if (w5Page + 1 > maxfivedumps) {
+                                } else {
+                                  const dumps = await get5wdump(
+                                    w5Page + 1,
+                                    areaInfo.id
+                                  );
+                                  if (dumps) {
+                                    setCurrent5Why(dumps[0]);
+                                  }
+                                  setW5Page(w5Page + 1);
+                                }
+                              }}
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                              <span className="sr-only">Next Order</span>
+                            </Button>
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    ) : (
+                      <></>
+                    )}
                   </div>
                 </CardHeader>
-                <CardContent className="p-6 text-sm">
-                  <div className="grid gap-3">
-                    <div className="font-semibold">Que?</div>
-                    <p className="text-muted-foreground">Incidente menor</p>
-                  </div>
-                  <Separator className="my-4" />
-                  <div className="grid gap-3">
-                    <div className="font-semibold">Donde?</div>
-                    <div>
-                      <Badge>Almacen A3</Badge>
+                {current5why ? (
+                  <CardContent className="p-6 text-sm">
+                    <div className="grid gap-3">
+                      <div className="font-semibold">Que?</div>
+                      <p className="text-muted-foreground">
+                        {current5why.what}
+                      </p>
                     </div>
-                  </div>
-                  <Separator className="my-4" />
-                  <div className="grid gap-3">
-                    <div className="font-semibold">Quien?</div>
-                    <div>
-                      <Badge>Carlos Riojas</Badge>
+                    <Separator className="my-4" />
+                    <div className="grid gap-3">
+                      <div className="font-semibold">Donde?</div>
+                      <div>
+                        <Badge>{current5why.where}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <Separator className="my-4" />
-                  <div className="grid gap-3">
-                    <div className="font-semibold">Porque / Causa?</div>
-                    <div className="flex gap-2">
-                      <Badge>Mano Derecha</Badge>
+                    <Separator className="my-4" />
+                    <div className="grid gap-3">
+                      <div className="font-semibold">Quien?</div>
+                      <div>
+                        <Badge>{current5why.who}</Badge>
+                      </div>
                     </div>
-                    <p>Descripcion:</p>
-                    <p className="text-muted-foreground text-sm">
-                      Dentro del almacen cajeron varias cajas las cuales
-                      golpearon el boton de enscendido de una maquina
-                    </p>
-                  </div>
-                </CardContent>
+                    <Separator className="my-4" />
+                    <div className="grid gap-3">
+                      <div className="font-semibold">Porque / Causa?</div>
+                      <div className="flex gap-2">
+                        <Badge>{current5why.why}</Badge>
+                      </div>
+                      <p>Descripcion:</p>
+                      <p className="text-muted-foreground text-sm">
+                        {current5why.whyDetails}
+                      </p>
+                    </div>
+                  </CardContent>
+                ) : (
+                  <></>
+                )}
               </Card>
-            </div> */}
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="settings">
