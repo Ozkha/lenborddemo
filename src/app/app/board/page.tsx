@@ -30,6 +30,7 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     return <div>Es necesario especificar un tablero</div>;
   }
   const boardId = Number(searchParams.board);
+  console.log("🚀 ~ BooardPageSuspensed ~ boardId:", boardId);
 
   const db = await database;
 
@@ -40,6 +41,8 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     })
     .from(boards)
     .where(sql`${boards.id}=${boardId}`);
+
+  console.log(boardInfo);
 
   const kpiList = await db
     .select({
@@ -79,6 +82,7 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
       },
     })
     .from(areas)
+    .where(sql`${areas.boardId}=${boardId}`)
     .innerJoin(
       kpis,
       sql`${areas.kpiId}=${kpis.id} and ${areas.companyId}=${user.companyId}`
