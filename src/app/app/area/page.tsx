@@ -187,7 +187,7 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     .from(fiveWhys)
     .innerJoin(whys, sql`${whys.id} = ${fiveWhys.whyId}`)
     .where(
-      sql`${fiveWhys.companyId}=${user.companyId} and year(${fiveWhys.date}) = ${yrSlctd} and month(${fiveWhys.date}) = ${mthSlctd}`
+      sql`${fiveWhys.companyId}=${user.companyId} and year(${fiveWhys.date}) = ${yrSlctd} and month(${fiveWhys.date}) = ${mthSlctd} and ${fiveWhys.areaId}=${areaId}`
     )
     .groupBy(fiveWhys.whyId)
     .orderBy(desc(sql`frecuency`));
