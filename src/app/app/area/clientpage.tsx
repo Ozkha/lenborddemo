@@ -1,7 +1,6 @@
 "use client";
 
 import { get5wdump } from "@/actions/get5wdump";
-import { DatePickerRange } from "@/components/ui-compounded/daterangepicker";
 import MonthPicker from "@/components/ui-compounded/monthpicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -45,6 +51,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { addDays, format } from "date-fns";
 import {
   CalendarIcon,
@@ -53,72 +60,14 @@ import {
   Copy,
   SquareCheck,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Form } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-
-const data = [
-  {
-    cause: "A",
-    frecuency: 23,
-  },
-  {
-    cause: "B",
-    frecuency: 17,
-  },
-  {
-    cause: "C",
-    frecuency: 15,
-  },
-  {
-    cause: "D",
-    frecuency: 9,
-  },
-  {
-    cause: "E",
-    frecuency: 9,
-  },
-  {
-    cause: "F",
-    frecuency: 8,
-  },
-  {
-    cause: "G",
-    frecuency: 7,
-  },
-  {
-    cause: "H",
-    frecuency: 2,
-  },
-  {
-    cause: "I",
-    frecuency: 1,
-  },
-  {
-    cause: "J",
-    frecuency: 1,
-  },
-  {
-    cause: "K",
-    frecuency: 1,
-  },
-  {
-    cause: "L",
-    frecuency: 1,
-  },
-  {
-    cause: "M",
-    frecuency: 1,
-  },
-  {
-    cause: "N",
-    frecuency: 1,
-  },
-  {
-    cause: "O",
-    frecuency: 1,
-  },
-];
+import { z } from "zod";
+import { toast } from "@/components/ui/use-toast";
+import { addTask } from "@/actions/addTask";
 
 type AreaPageProps = {
   user: any;
@@ -127,6 +76,7 @@ type AreaPageProps = {
     id: number;
     name: number;
     board: {
+      id: number;
       name: string;
     };
     kpi: {
@@ -166,7 +116,25 @@ type AreaPageProps = {
         whyDetails: string | null;
       }
     | undefined;
+  userList: {
+    value: number;
+    name: string | null;
+    username: string;
+  }[];
 };
+
+const formAddTaskSchema = z.object({
+  title: z.string({ message: "Es necesario un titulo" }),
+  userAssignedId: z
+    .string({
+      message: "Es necesario un usuario responsable",
+    })
+    .min(1),
+  limitDate: z.date().optional(),
+  description: z.string().optional(),
+  problem: z.string({ message: "Es necesario definir el problema" }),
+  causeId: z.string({ message: "Es necesario seleccionar una causa" }).min(1),
+});
 
 export default function AreaPage({
   user,
@@ -176,8 +144,51 @@ export default function AreaPage({
   areaInfo,
   maxfivedumps,
   fivewhysFirstDump,
+  userList,
 }: AreaPageProps) {
   const router = useRouter();
+
+  const addTaskForm = useForm<z.infer<typeof formAddTaskSchema>>({
+    resolver: zodResolver(formAddTaskSchema),
+  });
+
+  function onAddTaskSubmit(values: z.infer<typeof formAddTaskSchema>) {
+    try {
+      addTask({
+        title: values.title,
+        boardId: areaInfo.board.id,
+        areaId: areaInfo.id,
+        userAssignedId: Number(values.userAssignedId),
+        assignedByUserId: Number(user.id),
+        problem: values.problem,
+        causeId: Number(values.causeId),
+        description: values.description,
+        dueDate: values.limitDate,
+        companyId: Number(user.companyId),
+      });
+
+      addTaskForm.resetField("title");
+      addTaskForm.setValue("title", "");
+
+      addTaskForm.resetField("limitDate");
+      addTaskForm.setValue("limitDate", undefined);
+
+      addTaskForm.resetField("problem");
+      addTaskForm.setValue("problem", "");
+
+      addTaskForm.resetField("description");
+      addTaskForm.setValue("description", "");
+      toast({
+        title: "Okay!",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error al asignar la <ion-textarea></ion-textarea>",
+      });
+    }
+  }
 
   const [w5Page, setW5Page] = useState(0);
   const [current5why, setCurrent5Why] = useState(fivewhysFirstDump);
@@ -320,107 +331,176 @@ export default function AreaPage({
                   <CardTitle className="flex items-center justify-between">
                     <p>Causas</p>
                     {/* TODO: Cuando sigua las tasks */}
-                    {/* <Dialog>
+                    <Dialog>
                       <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                         <SquareCheck className="w-4 h-4 mr-1" />
                         Asignar Accion
                       </DialogTrigger>
                       <DialogContent>
                         <div className="w-full flex gap-1">
-                          <Badge>Security</Badge>
-                          <Badge>Flexometro Linter</Badge>
+                          <Badge>{areaInfo.name}</Badge>
+                          <Badge>{areaInfo.board.name}</Badge>
                         </div>
-                        <Input
-                          className="text-lg border-0 border-b"
-                          placeholder="Titulo"
-                        />
-                        <div className="flex justify-start">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"ghost"}
-                                className={cn(
-                                  "max-w-[280px] justify-start text-left font-normal",
-                                  !date && "text-muted-foreground"
+                        <Form {...addTaskForm}>
+                          <form
+                            onSubmit={addTaskForm.handleSubmit(onAddTaskSubmit)}
+                          >
+                            <FormField
+                              control={addTaskForm.control}
+                              name="title"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      className="text-lg border-0 border-b"
+                                      placeholder="Titulo..."
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex justify-start my-2">
+                              <FormField
+                                control={addTaskForm.control}
+                                name="limitDate"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button
+                                            variant={"ghost"}
+                                            className={cn(
+                                              "max-w-[280px] justify-start text-left font-normal",
+                                              !field.value &&
+                                                "text-muted-foreground"
+                                            )}
+                                          >
+                                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                            {field.value ? (
+                                              format(field.value, "PPP")
+                                            ) : (
+                                              <span>Sin fecha limite</span>
+                                            )}
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent
+                                        className="w-auto p-0"
+                                        align="start"
+                                      >
+                                        <Calendar
+                                          mode="single"
+                                          selected={field.value}
+                                          onSelect={field.onChange}
+                                          disabled={(date) => date < new Date()}
+                                          initialFocus
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
                                 )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                                {dateA ? (
-                                  format(dateA, "PPP")
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">
-                                    Sin fecha limite
-                                  </span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={dateA}
-                                onSelect={setDateA}
-                                initialFocus
                               />
-                            </PopoverContent>
-                          </Popover>
-                          <Separator orientation="vertical" />
-                          <div className="flex items-center">
-                            <p className="text-xs text-gray-500 ml-2">👤</p>
-                            <Select>
-                              <SelectTrigger className="max-w-[180px] border-0">
-                                <SelectValue placeholder="Responsable" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="joseperalez">
-                                  Jose Peralez
-                                </SelectItem>
-                                <SelectItem value="yeraldi macias">
-                                  Yeraldi Macias
-                                </SelectItem>
-                                <SelectItem value="Montoya Hector">
-                                  Montoya Hector
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                              <Separator orientation="vertical" />
+                              <FormField
+                                control={addTaskForm.control}
+                                name="userAssignedId"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex items-center">
+                                      <p className="text-xs text-gray-500 ml-2">
+                                        👤
+                                      </p>
+                                      {/* TODO: Hacer esta wea, ya que ya tengo los usuarios */}
+                                      <Select onValueChange={field.onChange}>
+                                        <FormControl>
+                                          <SelectTrigger className="max-w-[180px] border-0">
+                                            <SelectValue placeholder="Usuario responsable" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {userList.map((usr) => (
+                                            <SelectItem value={usr.value + ""}>
+                                              {usr.name
+                                                ? usr.name
+                                                : usr.username}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
 
-                        <Label htmlFor="description">Descripcion</Label>
-                        <Textarea id="description" placeholder="..."></Textarea>
-                        <Separator />
-                        <div className="space-y-3">
-                          <div>
-                            <Label htmlFor="problemainput">Problema</Label>
-                            <Input id="problemainput"></Input>
-                          </div>
-                          <div>
-                            <Label htmlFor="causaselect">Causa</Label>
-                            <Select>
-                              <SelectTrigger
-                                id="causaselect"
-                                className="w-full"
-                              >
-                                <SelectValue placeholder="Selecciona la Causa" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="light">
-                                  Mano Derecha
-                                </SelectItem>
-                                <SelectItem value="dark">
-                                  Mano Derecha
-                                </SelectItem>
-                                <SelectItem value="system">
-                                  Mano Derecha
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <Button disabled className="mt-4">
-                          Asignar
-                        </Button>
+                            <FormField
+                              control={addTaskForm.control}
+                              name="problem"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Problema</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={addTaskForm.control}
+                              name="causeId"
+                              render={({ field }) => (
+                                <FormItem className="mt-2">
+                                  <FormLabel>Causa</FormLabel>
+                                  <Select onValueChange={field.onChange}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Selecciona la Causa" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {causes.map((cause) => (
+                                        <SelectItem
+                                          key={cause.id + ""}
+                                          value={cause.id + ""}
+                                        >
+                                          {cause.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={addTaskForm.control}
+                              name="description"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <FormLabel>Descripcion</FormLabel>
+                                  <FormControl>
+                                    <Textarea placeholder="..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <Button className="w-full mt-4" type="submit">
+                              Asignar
+                            </Button>
+                          </form>
+                        </Form>
                       </DialogContent>
-                    </Dialog> */}
+                    </Dialog>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col md:flex-row md:gap-4">

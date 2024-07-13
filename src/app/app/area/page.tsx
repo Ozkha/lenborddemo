@@ -8,6 +8,7 @@ import {
   fiveWhys,
   kpiMetric_tracking,
   kpis,
+  users,
   wheres,
   whos,
   whys,
@@ -155,6 +156,7 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       id: areas.id,
       name: areas.name,
       board: {
+        id: boards.id,
         name: boards.name,
       },
       kpi: {
@@ -171,6 +173,7 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     id: number;
     name: number;
     board: {
+      id: number;
       name: string;
     };
     kpi: {
@@ -213,7 +216,12 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     .leftJoin(whos, sql`${whos.id}=${fiveWhys.whoId}`)
     .leftJoin(whys, sql`${whys.id}=${fiveWhys.whyId}`);
 
-  // TODO: Muestra el nombre del area Incorrecto.
+  const usersList = await db
+    .select({ value: users.id, name: users.name, username: users.username })
+    .from(users)
+    .where(
+      sql`${users.role}<>'admin' and ${users.companyId}=${user.companyId}`
+    );
 
   return (
     <>
@@ -233,6 +241,7 @@ export default async function AreaPageSuspended({ searchParams }: any) {
         }}
         user={user}
         causes={causes}
+        userList={usersList}
       ></AreaPage>
     </>
   );

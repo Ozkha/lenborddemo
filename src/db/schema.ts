@@ -37,10 +37,6 @@ export const users = mysqlTable("users", {
 });
 export type newUser = typeof users.$inferInsert;
 
-// TODO: DEBERIA ESTAR AQUI EL USER_BOARD_RESPOSABILITY que muestra
-// a que boards tiene acceso cada uno de los usuarios. de su rol.
-// Esta en el sqleditor de supabase.
-
 export const userBoardResponsabiliy = mysqlTable(
   "user_board_responsability",
   {
@@ -184,3 +180,36 @@ export const fiveWhys = mysqlTable("five_whys", {
     .references(() => comapnies.id)
     .notNull(),
 });
+
+export const tasks = mysqlTable("tasks", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 1000 }).notNull(),
+  dueDate: timestamp("due_date", { fsp: 2, mode: "date" }),
+  problem: varchar("problem", { length: 1000 }).notNull(),
+  userAssignedId: bigint("userid_assigned", { unsigned: true, mode: "number" })
+    .references(() => users.id)
+    .notNull(),
+  assignedByUserId: bigint("assigned_by_userid", {
+    unsigned: true,
+    mode: "number",
+  })
+    .references(() => users.id)
+    .notNull(),
+  causeId: bigint("cause_id", { unsigned: true, mode: "number" })
+    .references(() => whys.id)
+    .notNull(),
+  status: mysqlEnum("status", ["todo", "inprogress", "completed"]).default(
+    "todo"
+  ),
+  boardId: bigint("board_id", { unsigned: true, mode: "number" })
+    .references(() => boards.id)
+    .notNull(),
+  areaId: bigint("area_id", { unsigned: true, mode: "number" })
+    .references(() => areas.id)
+    .notNull(),
+  companyId: bigint("company_id", { unsigned: true, mode: "number" })
+    .references(() => comapnies.id)
+    .notNull(),
+});
+
+export type newTask = typeof tasks.$inferInsert;
