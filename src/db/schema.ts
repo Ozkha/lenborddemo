@@ -8,6 +8,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -35,6 +36,28 @@ export const users = mysqlTable("users", {
     .notNull(),
 });
 export type newUser = typeof users.$inferInsert;
+
+// TODO: DEBERIA ESTAR AQUI EL USER_BOARD_RESPOSABILITY que muestra
+// a que boards tiene acceso cada uno de los usuarios. de su rol.
+// Esta en el sqleditor de supabase.
+
+export const userBoardResponsabiliy = mysqlTable(
+  "user_board_responsability",
+  {
+    id: serial("id").primaryKey(),
+    userId: bigint("user_id", { unsigned: true, mode: "number" })
+      .references(() => users.id)
+      .notNull(),
+    boardId: bigint("board_id", { unsigned: true, mode: "number" })
+      .references(() => boards.id)
+      .notNull(),
+  },
+  (t) => ({
+    unq: unique().on(t.userId, t.boardId),
+  })
+);
+
+export type newUserBoardResp = typeof userBoardResponsabiliy.$inferInsert;
 
 export const boards = mysqlTable("boards", {
   id: serial("id").primaryKey(),
@@ -148,7 +171,7 @@ export const fiveWhys = mysqlTable("five_whys", {
     .references(() => wheres.id)
     .notNull(),
   whoId: bigint("who_id", { unsigned: true, mode: "number" })
-    .references(() => whys.id)
+    .references(() => whos.id)
     .notNull(),
   whyId: bigint("why_id", { unsigned: true, mode: "number" })
     .references(() => whys.id)

@@ -1,5 +1,10 @@
 "use client";
 
+import { addUser } from "@/actions/addUser";
+import { changeUserBoardResps } from "@/actions/changeUserBoardResps";
+import { changeUserPassword } from "@/actions/changeUserPassword";
+import { changeUserRole } from "@/actions/changeUserRole";
+import { changeUserState } from "@/actions/changeUserState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +31,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -58,23 +72,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { User } from "@supabase/supabase-js";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeftRight,
   CheckIcon,
+  Eye,
   Pencil,
   PlusCircleIcon,
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type FacetedFilterProps = {
   title: string;
-  options: string[];
+  options: { value: number; label: string }[];
+  defaultValues?: number[];
+  values?: number[];
+  onChangeValues: (...event: any) => void;
 };
-function FacetedFilter({ title, options }: FacetedFilterProps) {
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+function FacetedFilter({
+  title,
+  options,
+  defaultValues,
+  values,
+  onChangeValues,
+}: FacetedFilterProps) {
+  const [innerValues, setInnervalues] = useState(defaultValues || []);
 
   return (
     <Popover>
@@ -82,15 +109,24 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
         <Button variant={"outline"} size={"sm"} className="h-8 border-dashed">
           <PlusCircleIcon className="mr-2 h-4 w-4" />
           {title}
-
-          {selectedValues.length > 0 && (
+          {values ? (
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <Badge
                 variant={"secondary"}
                 className="rounded-sm px-1 font-normal"
               >
-                {selectedValues.length}
+                {values.length}
+              </Badge>
+            </>
+          ) : (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge
+                variant={"secondary"}
+                className="rounded-sm px-1 font-normal"
+              >
+                {innerValues.length}
               </Badge>
             </>
           )}
@@ -103,17 +139,37 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
             <CommandEmpty>Sin resultados</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
-                const isSelected = selectedValues.includes(option);
+                let isSelected: boolean;
+                if (values) {
+                  isSelected = values.includes(option.value);
+                } else {
+                  isSelected = innerValues.includes(option.value);
+                }
+
                 return (
                   <CommandItem
-                    key={"key" + option}
+                    key={"key-" + option.value}
                     onSelect={() => {
                       if (isSelected) {
-                        setSelectedValues(
-                          selectedValues.filter((optionh) => optionh !== option)
-                        );
+                        if (values) {
+                          onChangeValues(
+                            values.filter((opt) => opt !== option.value)
+                          );
+                        } else {
+                          setInnervalues(
+                            innerValues.filter((opt) => opt !== option.value)
+                          );
+                          onChangeValues(
+                            innerValues.filter((opt) => opt !== option.value)
+                          );
+                        }
                       } else {
-                        setSelectedValues([...selectedValues, option]);
+                        if (values) {
+                          onChangeValues([...values, option.value]);
+                        } else {
+                          setInnervalues([...innerValues, option.value]);
+                          onChangeValues([...innerValues, option.value]);
+                        }
                       }
                     }}
                   >
@@ -127,7 +183,7 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
                     >
                       <CheckIcon className={cn("h-4 w-4")} />
                     </div>
-                    <span>{option}</span>
+                    <span>{option.label}</span>
                   </CommandItem>
                 );
               })}
@@ -139,31 +195,110 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
   );
 }
 
-export default function UsersPage({ user }: { user: User }) {
-  const [usersList, setUsersList] = useState([
-    {
-      name: "Pedro Garza",
-      user: "Pedrogz",
-      rol: "administrador",
-      estado: "activo",
-    },
-    {
-      name: "Armando Lopez",
-      user: "ARML",
-      rol: "trabajador",
-      estado: "activo",
-    },
-  ]);
+const addUserFormSchema = z.object({
+  name: z.string().optional(),
+  username: z.string().min(3, {
+    message: "Es necesario un nombre de usuario de minimo 3 caracteres",
+  }),
+  password: z
+    .string()
+    .min(8, { message: "Contrasña requerida de minimo 8 caracteres" }),
+  role: z.enum(["worker", "board_moderator"], {
+    message: "Es necesario un rol",
+  }),
+  boardsIDsThatParticipate: z.array(z.number()),
+});
 
-  const boardOptions = [
-    "Xbox260",
-    "Flexometro linter",
-    "Llantas inflables",
-    "B1: Flexometro",
-    "B2: Flexometro",
-  ];
+const changePasswordFormSchema = z.object({
+  password: z.string().min(8, { message: "Minimo 8 caracteres" }),
+});
 
+type UsersPageProps = {
+  user: any;
+  userRole: "worker" | "board_moderator" | "admin";
+  boardList: {
+    value: number;
+    label: string;
+  }[];
+  userList: {
+    id: number;
+    username: string;
+    name: string | null;
+    role: "worker" | "board_moderator" | "admin";
+    status: "active" | "inactive";
+    userBoardResponsability: {
+      id: number;
+      boardId: number;
+      name: string;
+    }[];
+  }[];
+};
+
+export default function UsersPage({
+  user,
+  userRole,
+  userList,
+  boardList,
+}: UsersPageProps) {
   const [isChangePassActive, setIsChangePassActive] = useState(false);
+  const [hidePass, setHidePass] = useState(true);
+
+  const addUserForm = useForm<z.infer<typeof addUserFormSchema>>({
+    resolver: zodResolver(addUserFormSchema),
+    defaultValues: {
+      boardsIDsThatParticipate: [],
+    },
+  });
+
+  function onAddUserSubmit(values: z.infer<typeof addUserFormSchema>) {
+    try {
+      addUser({
+        name: values.name,
+        username: values.username,
+        password: values.password,
+        role: values.role,
+        boardsIDsThatParticipate: values.boardsIDsThatParticipate,
+        companyId: user.companyId as number,
+      });
+      addUserForm.reset();
+
+      toast({
+        title: "Okay!",
+        description: "Nuevo Usuario creado con exito",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posbible crear el usuario",
+      });
+    }
+  }
+
+  const changePasswordForm = useForm<z.infer<typeof changePasswordFormSchema>>({
+    resolver: zodResolver(changePasswordFormSchema),
+  });
+
+  function onChangePasswordSubmit(
+    values: z.infer<typeof changePasswordFormSchema>,
+    userId: number
+  ) {
+    try {
+      changeUserPassword(userId, values.password);
+      changePasswordForm.resetField("password");
+      changePasswordForm.setValue("password", "");
+      toast({
+        title: "Okay!",
+        description: "Contraseña cambiada con exito",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No fue posible cambiar la contraseña",
+      });
+    }
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
@@ -184,48 +319,101 @@ export default function UsersPage({ user }: { user: User }) {
                 <DialogHeader>
                   <DialogTitle>Nuevo Usuario</DialogTitle>
                 </DialogHeader>
-                <Label htmlFor="inputnombre" className="mt-2">
-                  Nombre
-                </Label>
-                <Input
-                  type="text"
-                  id="inputnombre"
-                  placeholder="Ej. Jose Ramirez"
-                ></Input>
+                <Form {...addUserForm}>
+                  <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)}>
+                    <FormField
+                      control={addUserForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nombre" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={addUserForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Usuario</FormLabel>
+                          <FormControl>
+                            <Input placeholder="usuario" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Label htmlFor="inputuser">Usuario</Label>
-                <Input
-                  type="text"
-                  id="inputuser"
-                  placeholder="Ej. josermz / JOSERZ / JOSErm"
-                ></Input>
+                    <FormField
+                      control={addUserForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contraseña</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Label htmlFor="inputpassword">Contraseña</Label>
-                <Input
-                  type="password"
-                  id="inputpassword"
-                  placeholder="Contraseña"
-                ></Input>
+                    <FormField
+                      control={addUserForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Rol</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un Rol" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="worker">Trabajador</SelectItem>
+                              <SelectItem value="board_moderator">
+                                Manager de Tablero
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Label htmlFor="selectrol">Rol inicial</Label>
-                <Select>
-                  <SelectTrigger id="selectrol">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Administrador</SelectItem>
-                    <SelectItem value="dark">Manager de Tablero</SelectItem>
-                    <SelectItem value="system">Trabajador</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <FacetedFilter title="Tableros" options={boardOptions} />
-                {/* TODO: En caso de que sea manager de tablero, que tableros seran */}
-                {/* TODO: En caso de que sea trabajador, a que tableros estara asignado */}
-
-                <Button className="mt-6" disabled>
-                  Crear Usuario
-                </Button>
+                    <FormField
+                      control={addUserForm.control}
+                      name="boardsIDsThatParticipate"
+                      render={({ field }) => (
+                        <FormItem className="w-full flex flex-col justify-center mt-6">
+                          <FormControl>
+                            <FacetedFilter
+                              title="Tableros"
+                              values={field.value}
+                              onChangeValues={field.onChange}
+                              options={boardList}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Tableros en los que participara de acuerdo a su Rol
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button className="w-full mt-6" type="submit">
+                      Crear Usuario
+                    </Button>
+                  </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>
@@ -241,42 +429,62 @@ export default function UsersPage({ user }: { user: User }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usersList.map((user) => (
-                <TableRow key={user.user}>
+              {userList.map((LUser) => (
+                <TableRow key={LUser.id}>
                   <TableCell>
                     <div>
                       <div className="font-medium text-sm md:text-base">
-                        {user.name}
+                        {LUser.name}
                       </div>
                       <div className="text-xs md:text-sm text-muted-foreground">
-                        {user.user}
+                        {LUser.username}
                       </div>
                     </div>
                   </TableCell>
 
                   <TableCell>
-                    <Select defaultValue={user.rol.toLowerCase()}>
-                      <SelectTrigger className="w-[200px]">
+                    <Select
+                      onValueChange={(val) => {
+                        try {
+                          changeUserRole({
+                            userId: LUser.id,
+                            newRole: val as "worker" | "board_moderator",
+                          });
+                        } catch (e) {
+                          toast({
+                            variant: "destructive",
+                            title: "Error",
+                            description:
+                              "No fue posbible cambiar el rol del usuario",
+                          });
+                        }
+                      }}
+                      defaultValue={LUser.role.toLowerCase()}
+                    >
+                      <SelectTrigger
+                        disabled={LUser.role == "admin" ? true : false}
+                        className="w-[200px]"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="administrador">
+                        <SelectItem disabled value="admin">
                           Administrador
                         </SelectItem>
-                        <SelectItem value="manager">
+                        <SelectItem value="board_moderator">
                           Manager de Tablero
                         </SelectItem>
-                        <SelectItem value="trabajador">Trabajador</SelectItem>
+                        <SelectItem value="worker">Trabajador</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge
                       variant={
-                        user.estado == "activo" ? "default" : "destructive"
+                        LUser.status == "active" ? "default" : "destructive"
                       }
                     >
-                      {user.estado == "activo" ? "Activo" : "Bloqueado"}
+                      {LUser.status == "active" ? "Activo" : "Bloqueado"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -285,55 +493,109 @@ export default function UsersPage({ user }: { user: User }) {
                         <Pencil className="w-4 h-4" />
                       </DialogTrigger>
                       <DialogContent className="mt-5">
-                        {/* TODO: Me quede aqui */}
                         <div className="flex items-center gap-2">
                           <Badge
                             variant={
-                              user.estado == "activo"
+                              LUser.status == "active"
                                 ? "default"
                                 : "destructive"
                             }
                           >
-                            {user.estado == "activo" ? "Activo" : "Bloqueado"}
+                            {LUser.status == "active" ? "Activo" : "Bloqueado"}
                           </Badge>
-                          <Button variant={"ghost"} size={"icon"}>
+                          <Button
+                            disabled={LUser.role == "admin" ? true : false}
+                            variant={"ghost"}
+                            size={"icon"}
+                            onClick={() => {
+                              changeUserState(
+                                LUser.id,
+                                LUser.status == "active" ? "inactive" : "active"
+                              );
+                            }}
+                          >
                             <ArrowLeftRight className="w-4 h-4" />
                           </Button>
                         </div>
                         <div>
-                          <p className="text-lg font-medium">{user.name}</p>
+                          <p className="text-lg font-medium">{LUser.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {user.user}
+                            {LUser.username}
                           </p>
                         </div>
-                        <Select defaultValue={user.rol.toLowerCase()}>
-                          <SelectTrigger className="w-full">
+                        <Select
+                          onValueChange={(val) => {
+                            try {
+                              changeUserRole({
+                                userId: LUser.id,
+                                newRole: val as "worker" | "board_moderator",
+                              });
+                            } catch (e) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description:
+                                  "No fue posbible cambiar el rol del usuario",
+                              });
+                            }
+                          }}
+                          defaultValue={LUser.role.toLowerCase()}
+                        >
+                          <SelectTrigger
+                            disabled={LUser.role == "admin" ? true : false}
+                            className="w-full"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="administrador">
-                              Administrador
-                            </SelectItem>
-                            <SelectItem value="manager">
+                            <SelectItem value="admin">Administrador</SelectItem>
+                            <SelectItem value="board_moderator">
                               Manager de Tablero
                             </SelectItem>
-                            <SelectItem value="trabajador">
-                              Trabajador
-                            </SelectItem>
+                            <SelectItem value="worker">Trabajador</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FacetedFilter
-                          title="Tableros"
-                          options={boardOptions}
-                        />
+                        {LUser.role == "admin" ? undefined : (
+                          <FacetedFilter
+                            title="Tableros"
+                            defaultValues={LUser.userBoardResponsability.map(
+                              (boardResp) => {
+                                return boardResp.boardId;
+                              }
+                            )}
+                            onChangeValues={(val) => {
+                              const newBoardsRespIds: number[] = val;
+                              changeUserBoardResps(LUser.id, newBoardsRespIds);
+                              console.log("Cambio value: ", newBoardsRespIds);
+                            }}
+                            options={boardList}
+                          />
+                        )}
                         <Button
                           onClick={() => {
-                            setIsChangePassActive(true);
+                            setIsChangePassActive(!isChangePassActive);
                           }}
-                          variant={isChangePassActive ? "default" : "secondary"}
-                          className="mt-4"
+                          variant={"secondary"}
+                          className={cn([
+                            "mt-4",
+                            (() => {
+                              if (LUser.role == "admin") {
+                                return "hidden";
+                              }
+                              if (userRole !== "admin") {
+                                return "hidden";
+                              }
+                            })(),
+                          ])}
                         >
-                          Cambiar Contraseña
+                          {isChangePassActive ? (
+                            <>
+                              <X className="w-4 h-4" />
+                              Cancelar
+                            </>
+                          ) : (
+                            "Cambiar Contraseña"
+                          )}
                         </Button>
                         <div
                           className={cn([
@@ -341,25 +603,49 @@ export default function UsersPage({ user }: { user: User }) {
                             isChangePassActive ? undefined : "hidden",
                           ])}
                         >
-                          <Input
-                            type="password"
-                            placeholder="Nueva Contraseña"
-                          />
-                          <Input
-                            type="password"
-                            placeholder="Confirmar Contraseña"
-                          />
-                          <Button
-                            variant={"ghost"}
-                            size={"icon"}
-                            className="w-full"
-                            onClick={() => {
-                              setIsChangePassActive(false);
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                            Cancelar
-                          </Button>
+                          <Form {...changePasswordForm}>
+                            <form
+                              onSubmit={changePasswordForm.handleSubmit(
+                                (
+                                  values: z.infer<
+                                    typeof changePasswordFormSchema
+                                  >
+                                ) => {
+                                  onChangePasswordSubmit(values, LUser.id);
+                                }
+                              )}
+                              className="flex items-start w-full"
+                            >
+                              <FormField
+                                control={changePasswordForm.control}
+                                name="password"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormControl>
+                                      <Input
+                                        type={hidePass ? "password" : "text"}
+                                        placeholder="Nueva Contraseña"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                className="ml-2 mr-8"
+                                variant={"ghost"}
+                                size={"icon"}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setHidePass(!hidePass);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button type="submit">Confirmar</Button>
+                            </form>
+                          </Form>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -369,7 +655,7 @@ export default function UsersPage({ user }: { user: User }) {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter>
+        {/* <CardFooter>
           <div className="w-full">
             <div className="text-xs text-muted-foreground">
               Se muestran <strong>1-10</strong> de <strong>32</strong> usuarios
@@ -399,7 +685,7 @@ export default function UsersPage({ user }: { user: User }) {
               </PaginationContent>
             </Pagination>
           </div>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </main>
   );
