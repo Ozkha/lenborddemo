@@ -169,6 +169,27 @@
       "when": 1720858410954,
       "tag": "0023_complex_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1720919951066,
+      "tag": "0024_fresh_proudstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1720925642927,
+      "tag": "0025_workable_kylun",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1720929964569,
+      "tag": "0026_flat_thunderbolts",
+      "breakpoints": true
     }
   ]
 }

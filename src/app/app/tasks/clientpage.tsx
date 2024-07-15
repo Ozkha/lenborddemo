@@ -1,4 +1,6 @@
 "use client";
+import { changeTaskState } from "@/actions/changeTaskState";
+import { deleteTask } from "@/actions/deleteTask";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,25 +23,41 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { User } from "@supabase/supabase-js";
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarClock,
   CheckIcon,
   PlusCircleIcon,
   Trash,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type FacetedFilterProps = {
   title: string;
-  options: string[];
+  options: { value: number; label: string }[];
+  defaultValues?: number[];
+  values?: number[];
+  onChangeValues: (...event: any) => void;
 };
-
-function FacetedFilter({ title, options }: FacetedFilterProps) {
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+function FacetedFilter({
+  title,
+  options,
+  defaultValues,
+  values,
+  onChangeValues,
+}: FacetedFilterProps) {
+  const [innerValues, setInnervalues] = useState(defaultValues || []);
 
   return (
     <Popover>
@@ -47,15 +65,24 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
         <Button variant={"outline"} size={"sm"} className="h-8 border-dashed">
           <PlusCircleIcon className="mr-2 h-4 w-4" />
           {title}
-
-          {selectedValues.length > 0 && (
+          {values ? (
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <Badge
                 variant={"secondary"}
                 className="rounded-sm px-1 font-normal"
               >
-                {selectedValues.length}
+                {values.length}
+              </Badge>
+            </>
+          ) : (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge
+                variant={"secondary"}
+                className="rounded-sm px-1 font-normal"
+              >
+                {innerValues.length}
               </Badge>
             </>
           )}
@@ -68,17 +95,37 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
             <CommandEmpty>Sin resultados</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
-                const isSelected = selectedValues.includes(option);
+                let isSelected: boolean;
+                if (values) {
+                  isSelected = values.includes(option.value);
+                } else {
+                  isSelected = innerValues.includes(option.value);
+                }
+
                 return (
                   <CommandItem
-                    key={"key" + option}
+                    key={"key-" + option.value}
                     onSelect={() => {
                       if (isSelected) {
-                        setSelectedValues(
-                          selectedValues.filter((optionh) => optionh !== option)
-                        );
+                        if (values) {
+                          onChangeValues(
+                            values.filter((opt) => opt !== option.value)
+                          );
+                        } else {
+                          setInnervalues(
+                            innerValues.filter((opt) => opt !== option.value)
+                          );
+                          onChangeValues(
+                            innerValues.filter((opt) => opt !== option.value)
+                          );
+                        }
                       } else {
-                        setSelectedValues([...selectedValues, option]);
+                        if (values) {
+                          onChangeValues([...values, option.value]);
+                        } else {
+                          setInnervalues([...innerValues, option.value]);
+                          onChangeValues([...innerValues, option.value]);
+                        }
                       }
                     }}
                   >
@@ -92,7 +139,7 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
                     >
                       <CheckIcon className={cn("h-4 w-4")} />
                     </div>
-                    <span>{option}</span>
+                    <span>{option.label}</span>
                   </CommandItem>
                 );
               })}
@@ -105,28 +152,36 @@ function FacetedFilter({ title, options }: FacetedFilterProps) {
 }
 
 type TaskCardProps = {
+  id: number;
   title: string;
   tags: string[];
-  endDate: string;
+  endDate?: Date | null;
   assignedUser: string;
-  description: string;
+  assignedBy: string;
+  description?: string | null;
   problem: string;
   cause: string;
+  state: "todo" | "inprogress" | "done";
 };
 
+// TODO: Aqui ando, corregir errores, modificar segun los nuevos datos
+// Agregar los comportamiento o funciones de backend (los botones de por hacer, copmpletado, eliminar, etc.)
+// Comportamiento de los filtros y su estado en los searchParams.
 function TaskCard({
+  id,
   title,
   tags,
   endDate,
   assignedUser,
+  assignedBy,
   description,
   problem,
   cause,
+  state,
 }: TaskCardProps) {
   const [willDelete, setWillDelete] = useState(false);
   return (
     <Dialog>
-      {/* TODO: Agregar keys mas especificas. (con indice agregado talvez) */}
       <DialogTrigger className="max-w-[30rem]">
         <Card>
           <CardContent className="mt-5 flex flex-col">
@@ -139,9 +194,21 @@ function TaskCard({
               {title}
             </h4>
             <div className="flex justify-start mt-2">
-              <p className="text-xs text-gray-500 mr-3">{endDate}</p>
-              <Separator orientation="vertical" />
               <p className="text-xs text-gray-500">{assignedUser}</p>
+
+              <Separator orientation="vertical" />
+              {endDate ? (
+                <CalendarClock className="h-4 w-4 text-gray-500 ml-4 mr-2" />
+              ) : undefined}
+
+              <p className="text-xs text-gray-500 mr-3">
+                {endDate?.toLocaleDateString("es-MX", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -151,14 +218,40 @@ function TaskCard({
           {tags.map((tagName) => (
             <Badge key={"dialog-" + tagName}>{tagName}</Badge>
           ))}
+          <Badge
+            className={(() => {
+              if (state == "todo") return "bg-slate-400";
+              if (state == "inprogress") return "bg-blue-400";
+              if (state == "done") return "bg-green-400";
+            })()}
+          >
+            {(() => {
+              if (state == "todo") return "Por Hacer";
+              if (state == "inprogress") return "En Progreso";
+              if (state == "done") return "Hecha";
+            })()}
+          </Badge>
         </div>
         <h4 className="text-start scroll-m-20 text-lg font-medium tracking-tight">
           {title}
         </h4>
-        <div className="flex justify-start">
-          <p className="text-xs text-gray-500 mr-3">{endDate}</p>
-          <Separator orientation="vertical" />
-          <p className="text-xs text-gray-500 ml-2">👤 {assignedUser}</p>
+        <div className="flex">
+          {endDate ? (
+            <CalendarClock className="h-4 w-4 text-gray-500 mr-2" />
+          ) : undefined}
+          <p className="text-xs text-gray-500">
+            {endDate?.toLocaleDateString("es-MX", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+          {endDate ? (
+            <Separator orientation="vertical" className="mx-2" />
+          ) : undefined}
+
+          <p className="text-xs text-gray-500">Aignada a: 👤 {assignedUser}</p>
         </div>
         <p className="leading-7 [&:not(:first-child)]:mt-2">{description}</p>
         <Separator />
@@ -173,94 +266,174 @@ function TaskCard({
           </div>
         </div>
         <div className="flex gap-4 w-full mt-2">
-          <Button variant={"outline"} className="w-full">
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Por Hacer
-          </Button>
-          <Button variant={"outline"} className="w-full">
-            Completada
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
+          {state == "todo" ? (
+            <>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "inprogress");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                En progreso
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "completed");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                Completada
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </>
+          ) : undefined}
+          {state == "inprogress" ? (
+            <>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "todo");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Por Hacer
+              </Button>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "completed");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                Completada
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </>
+          ) : undefined}
+          {state == "done" ? (
+            <>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "todo");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Por Hacer
+              </Button>
+              <Button
+                onClick={() => {
+                  changeTaskState(id, "inprogress");
+                }}
+                variant={"outline"}
+                className="w-full"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                En progreso
+              </Button>
+            </>
+          ) : undefined}
         </div>
 
-        <div className="flex">
-          <Button
-            onClick={() => {
-              setWillDelete(true);
-            }}
-            variant={"ghost"}
-            size={"icon"}
-          >
-            <Trash className="w-4 h-4" />
-          </Button>
-          <div className={cn(["flex gap-2", willDelete ? "" : "hidden"])}>
+        <div className="flex items-center justify-between">
+          {/* TODO: Creo que el usuario normal nodeberia ser capaz de elimnar la tarea, a menos que sea el board_manager o el admin */}
+          <div className="flex">
             <Button
               onClick={() => {
-                setWillDelete(false);
+                setWillDelete(true);
               }}
-              variant={"secondary"}
+              variant={"ghost"}
+              size={"icon"}
             >
-              Cancelar
+              <Trash className="w-4 h-4" />
             </Button>
-            <Button variant={"destructive"}>Eliminar</Button>
+            <div className={cn(["flex gap-2", willDelete ? "" : "hidden"])}>
+              <Button
+                onClick={() => {
+                  setWillDelete(false);
+                }}
+                variant={"secondary"}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => {
+                  deleteTask(id);
+                }}
+                variant={"destructive"}
+              >
+                Eliminar
+              </Button>
+            </div>
           </div>
+          <p className="text-xs text-gray-500">Asignada por: {assignedBy}</p>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-// TODO: Talvez deberian tener value y label (como en los select)
-const userOptions = [
-  "Todos",
-  "Juan Peralez",
-  "Jose Ramiro",
-  "Elizabeth Campos",
-  "Yeraldi Mecias",
-];
-const areaOptions = ["Todos", "Security", "Quality", "People"];
-const boardOptions = [
-  "Todos",
-  "Xbox 360",
-  "Tornos Flinter",
-  "Llanta inflafle A4",
-  "B1: Laptops",
-  "B2: Laptops",
-];
-
-export default function TasksPage({ user }: { user: User }) {
-  type Task = {
-    title: string;
-    tags: string[];
-    endDate: string;
-    assignedUser: string;
-    description: string;
-    problem: string;
-    cause: string;
+type Tasks = {
+  id: number;
+  status: "todo" | "inprogress" | "completed";
+  boardName: string;
+  areaName: string;
+  description: string | null;
+  title: string;
+  dueDate: Date | null;
+  problem: string;
+  userAssigned: {
+    id: number;
+    name: string;
   };
+  userAllocator: {
+    id: number;
+    name: string;
+  };
+  cause: {
+    id: number;
+    name: string;
+  };
+}[];
 
-  const [todoTaskList, setTodoTaskList] = useState<Task[]>([
-    {
-      title: "A",
-      tags: ["Security", "Xbox"],
-      endDate: "20/12/2024",
-      assignedUser: "Jose Peralez",
-      description: "Eso",
-      problem: "Aquello",
-      cause: "Por eso",
-    },
-    {
-      title: "b",
-      tags: ["Security", "Xbox"],
-      endDate: "20/12/2024",
-      assignedUser: "Jose Peralez",
-      description: "Eso",
-      problem: "Aquello",
-      cause: "Por eso",
-    },
-  ]);
-  const [doingTaskList, setDoingTaskList] = useState<Task[]>([]);
-  const [doneTaskList, setDoneTaskList] = useState<Task[]>([]);
+type TasksPageProps = {
+  user: any;
+  userList: {
+    id: number;
+    name: string | null;
+    username: string;
+  }[];
+  boardList: {
+    id: number;
+    name: string;
+  }[];
+  todoTasks: Tasks;
+  inProgressTasks: Tasks;
+  doneTasks: Tasks;
+  filtersDefaultValues: {
+    board: string[];
+    user: string[];
+  };
+};
+export default function TasksPage({
+  user,
+  userList,
+  boardList,
+  todoTasks,
+  inProgressTasks,
+  doneTasks,
+  filtersDefaultValues,
+}: TasksPageProps) {
+  const router = useRouter();
+
+  const [queryRoute, setQueryRoute] = useState(
+    new URLSearchParams(window.location.search || "")
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
@@ -269,9 +442,65 @@ export default function TasksPage({ user }: { user: User }) {
           Acciones
         </h3>
         <div className="flex flex-wrap gap-2">
-          <FacetedFilter options={userOptions} title="Usuario" />
-          <FacetedFilter options={areaOptions} title="Area" />
-          <FacetedFilter options={boardOptions} title="Tablero" />
+          <FacetedFilter
+            options={userList.map((usr) => {
+              return { value: usr.id, label: usr.name as string };
+            })}
+            defaultValues={filtersDefaultValues.user.map((usrId) =>
+              Number(usrId)
+            )}
+            onChangeValues={(val) => {
+              const usersSelected = val as number[];
+              const newSrchParams = new URLSearchParams(
+                "?" + queryRoute.toString()
+              );
+
+              newSrchParams.delete("user");
+              usersSelected.map((usrId) => {
+                if (newSrchParams.has("user", usrId + "")) {
+                } else {
+                  newSrchParams.append("user", usrId + "");
+                }
+              });
+
+              setQueryRoute(newSrchParams);
+            }}
+            title="Usuario"
+          />
+          <FacetedFilter
+            options={boardList.map((brd) => {
+              return { value: brd.id, label: brd.name };
+            })}
+            defaultValues={filtersDefaultValues.board.map((brdId) =>
+              Number(brdId)
+            )}
+            onChangeValues={(val) => {
+              const boardsSelected = val as number[];
+              const newSrchParams = new URLSearchParams(
+                "?" + queryRoute.toString()
+              );
+
+              newSrchParams.delete("board");
+              boardsSelected.map((boardId) => {
+                if (newSrchParams.has("board", boardId + "")) {
+                } else {
+                  newSrchParams.append("board", boardId + "");
+                }
+              });
+
+              setQueryRoute(newSrchParams);
+            }}
+            title="Tablero"
+          />
+          <Button
+            onClick={() => {
+              router.replace("/app/tasks?" + queryRoute.toString());
+            }}
+            variant={"ghost"}
+            className="h-fit"
+          >
+            Aplicar Filtros
+          </Button>
         </div>
       </div>
       <Carousel>
@@ -281,21 +510,24 @@ export default function TasksPage({ user }: { user: User }) {
               Por Hacer
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              {todoTaskList.length > 0 ? (
+              {todoTasks.length > 0 ? (
                 <>
-                  {todoTaskList.map((task, index) => (
+                  {todoTasks.map((task, index) => (
                     <TaskCard
+                      id={task.id}
                       key={"task-todo-" + index}
                       title={task.title}
-                      tags={task.tags}
-                      endDate={task.endDate}
-                      assignedUser={task.assignedUser}
+                      tags={[task.areaName, task.boardName]}
+                      endDate={task.dueDate}
+                      assignedUser={task.userAssigned.name}
+                      assignedBy={task.userAllocator.name}
                       description={task.description}
                       problem={task.problem}
-                      cause={task.cause}
+                      cause={task.cause.name}
+                      state="todo"
                     />
                   ))}
-                  <Button variant={"ghost"}>Mostrar mas</Button>
+                  {/* <Button variant={"ghost"}>Mostrar mas</Button> */}
                 </>
               ) : (
                 <div className="text-center text-muted-foreground text-sm max-w-[30rem]">
@@ -309,17 +541,20 @@ export default function TasksPage({ user }: { user: User }) {
               En Progreso
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              {doingTaskList.length > 0 ? (
-                doingTaskList.map((task, index) => (
+              {inProgressTasks.length > 0 ? (
+                inProgressTasks.map((task, index) => (
                   <TaskCard
-                    key={"task-doing-" + index}
+                    id={task.id}
+                    key={"task-inprog-" + index}
                     title={task.title}
-                    tags={task.tags}
-                    endDate={task.endDate}
-                    assignedUser={task.assignedUser}
+                    tags={[task.areaName, task.boardName]}
+                    endDate={task.dueDate}
+                    assignedUser={task.userAssigned.name}
+                    assignedBy={task.userAllocator.name}
                     description={task.description}
                     problem={task.problem}
-                    cause={task.cause}
+                    cause={task.cause.name}
+                    state="inprogress"
                   />
                 ))
               ) : (
@@ -334,17 +569,20 @@ export default function TasksPage({ user }: { user: User }) {
               Hecho
             </h4>
             <div className="flex flex-col gap-3 lg:gap-4 mt-2 lg:mt-4">
-              {doneTaskList.length > 0 ? (
-                doneTaskList.map((task, index) => (
+              {doneTasks.length > 0 ? (
+                doneTasks.map((task, index) => (
                   <TaskCard
+                    id={task.id}
                     key={"task-done-" + index}
                     title={task.title}
-                    tags={task.tags}
-                    endDate={task.endDate}
-                    assignedUser={task.assignedUser}
+                    tags={[task.areaName, task.boardName]}
+                    endDate={task.dueDate}
+                    assignedUser={task.userAssigned.name}
+                    assignedBy={task.userAllocator.name}
                     description={task.description}
                     problem={task.problem}
-                    cause={task.cause}
+                    cause={task.cause.name}
+                    state="done"
                   />
                 ))
               ) : (

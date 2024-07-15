@@ -20,7 +20,7 @@ export type newCompany = typeof comapnies.$inferInsert;
 
 export const users = mysqlTable("users", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 254 }),
+  name: varchar("name", { length: 254 }).notNull(),
   username: varchar("username", { length: 50 }).notNull().unique(),
   password: varchar("password", { length: 254 }).notNull(),
   role: mysqlEnum("user_roles", [
@@ -186,6 +186,7 @@ export const tasks = mysqlTable("tasks", {
   title: varchar("title", { length: 1000 }).notNull(),
   dueDate: timestamp("due_date", { fsp: 2, mode: "date" }),
   problem: varchar("problem", { length: 1000 }).notNull(),
+  description: varchar("description", { length: 5000 }),
   userAssignedId: bigint("userid_assigned", { unsigned: true, mode: "number" })
     .references(() => users.id)
     .notNull(),
@@ -198,9 +199,9 @@ export const tasks = mysqlTable("tasks", {
   causeId: bigint("cause_id", { unsigned: true, mode: "number" })
     .references(() => whys.id)
     .notNull(),
-  status: mysqlEnum("status", ["todo", "inprogress", "completed"]).default(
-    "todo"
-  ),
+  status: mysqlEnum("status", ["todo", "inprogress", "completed"])
+    .default("todo")
+    .notNull(),
   boardId: bigint("board_id", { unsigned: true, mode: "number" })
     .references(() => boards.id)
     .notNull(),
