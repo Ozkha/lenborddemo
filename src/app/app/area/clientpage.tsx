@@ -330,7 +330,6 @@ export default function AreaPage({
                 <CardHeader className="px-7">
                   <CardTitle className="flex items-center justify-between">
                     <p>Causas</p>
-                    {/* TODO: Cuando sigua las tasks */}
                     <Dialog>
                       <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                         <SquareCheck className="w-4 h-4 mr-1" />
@@ -414,7 +413,6 @@ export default function AreaPage({
                                       <p className="text-xs text-gray-500 ml-2">
                                         👤
                                       </p>
-                                      {/* TODO: Hacer esta wea, ya que ya tengo los usuarios */}
                                       <Select onValueChange={field.onChange}>
                                         <FormControl>
                                           <SelectTrigger className="max-w-[180px] border-0">
