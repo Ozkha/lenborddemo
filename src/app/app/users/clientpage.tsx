@@ -196,7 +196,7 @@ function FacetedFilter({
 }
 
 const addUserFormSchema = z.object({
-  name: z.string().optional(),
+  name: z.string(),
   username: z.string().min(3, {
     message: "Es necesario un nombre de usuario de minimo 3 caracteres",
   }),

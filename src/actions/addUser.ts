@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 const validationSchema = z.object({
-  name: z.string().optional(),
+  name: z.string(),
   username: z.string().min(3, {
     message: "Es necesario un nombre de usuario de minimo 3 caracteres",
   }),
@@ -22,7 +22,7 @@ const validationSchema = z.object({
 });
 
 type addUserProps = {
-  name?: string;
+  name: string;
   username: string;
   password: string;
   role: "worker" | "board_moderator";
