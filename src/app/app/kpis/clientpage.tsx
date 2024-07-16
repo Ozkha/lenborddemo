@@ -520,7 +520,7 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
           {kpiList.length < 1 ? (
             <div className="w-full my-4">
               <p className="text-center text-muted-foreground">
-                No hay KPI's disponibles, cree uno nuevo.
+                No hay KPI{"'"}s disponibles, cree uno nuevo.
               </p>
             </div>
           ) : (
