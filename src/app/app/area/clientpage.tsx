@@ -421,7 +421,10 @@ export default function AreaPage({
                                         </FormControl>
                                         <SelectContent>
                                           {userList.map((usr) => (
-                                            <SelectItem value={usr.value + ""}>
+                                            <SelectItem
+                                              key={"usrss-" + usr.value}
+                                              value={usr.value + ""}
+                                            >
                                               {usr.name
                                                 ? usr.name
                                                 : usr.username}
