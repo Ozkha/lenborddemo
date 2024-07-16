@@ -81,6 +81,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             credentials
           );
 
+          // FIXME: Ojo con esto, aqui tendria que estar el domain
           const userFetched = await fetch(
             "http:localhost:3000/api/getuser?username=" + username
           );
@@ -90,6 +91,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           const user = await userFetched.json();
+
+          if (user.status == "inactive") {
+            throw new Error("Este usuario esta bloqueado");
+          }
 
           const isCorrectPassword = bcrypt.compareSync(password, user.password);
 

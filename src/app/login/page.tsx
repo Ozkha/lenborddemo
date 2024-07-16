@@ -62,7 +62,7 @@ export default function SignIn() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error al iniciar sesion</AlertTitle>
                 <AlertDescription>
-                  Usuario o Contraseña incorrectos
+                  Usuario/Contraseña incorrectos o Usuario Bloqueado
                 </AlertDescription>
               </Alert>
               <Form {...formSignIn}>
