@@ -539,6 +539,7 @@ export default function BoardPage({
                   >
                     {areaModalInfo?.fields.map((fieldMetric, indx) => (
                       <FormField
+                        key={"frmfld-" + fieldMetric + "-" + indx}
                         control={updateKpiDayTrackForm.control}
                         name="values"
                         render={({ field }) => (
