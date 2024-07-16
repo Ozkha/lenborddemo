@@ -42,6 +42,7 @@ export default async function createCompanyUser(formData: FormData) {
   const hashedPass = bcrypt.hashSync(validatedFields.data.password, salt);
 
   const newUser: newUser = {
+    name: "admin",
     username: validatedFields.data.username,
     password: hashedPass,
     role: "admin",
