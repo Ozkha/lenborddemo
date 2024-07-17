@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import KpisPage from "./clientpage";
 import { redirect } from "next/navigation";
 import { db as database } from "@/db";
-import { kpiGoals, kpis } from "@/db/schema";
+import { kpiGoals, kpis, users } from "@/db/schema";
 import { max, sql } from "drizzle-orm";
 
 export default async function BooardPageSuspensed() {
@@ -19,6 +19,20 @@ export default async function BooardPageSuspensed() {
   const user = session.user;
 
   const db = await database;
+
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  if (userInfo.role == "worker") {
+    redirect("/app/tasks?user=" + userInfo.id);
+  }
 
   const suba = db
     .select({
