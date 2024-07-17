@@ -24,6 +24,7 @@ import { boards, userBoardResponsabiliy, users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { addBoard } from "@/actions/addboard";
 import Header from "@/components/header";
+import { redirect } from "next/navigation";
 
 export default async function AppLayout({
   children,
@@ -33,7 +34,14 @@ export default async function AppLayout({
   // Verificar si si revalida el state de la lista de board aunque no se este en la pagina de boards
   const session = await auth();
 
-  const user = session!.user;
+  if (session) {
+    if (!session.user) {
+      redirect("/login");
+    }
+  } else {
+    redirect("/login");
+  }
+  const user = session.user;
   const db = await database;
 
   const [userInfo] = await db

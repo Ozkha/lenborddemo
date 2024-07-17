@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { signOutServer } from "@/lib/signout";
 
 type HeaderProps = {
   user: any;
@@ -120,10 +121,16 @@ export default function Header({
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Ajustes</DropdownMenuItem>
-              <DropdownMenuItem>Soporte</DropdownMenuItem>
+              {/* <DropdownMenuItem>Soporte</DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <button>Salir de cuenta</button>
+                <button
+                  onClick={() => {
+                    signOutServer("/login");
+                  }}
+                >
+                  Salir de cuenta
+                </button>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
