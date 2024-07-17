@@ -7,6 +7,8 @@ import {
   boards,
   kpiMetric_tracking,
   kpis,
+  userBoardResponsabiliy,
+  users,
   wheres,
   whos,
   whys,
@@ -25,12 +27,40 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
   }
 
   const user = session.user;
+  const db = await database;
+
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  if (userInfo.role == "worker") {
+    redirect("/app/tasks?user=" + userInfo.id);
+  }
+
+  const boardId = Number(searchParams.board);
 
   if (!searchParams.board) {
     return <div>Es necesario especificar un tablero</div>;
   }
-  const boardId = Number(searchParams.board);
-  const db = await database;
+
+  if (userInfo.role == "board_moderator") {
+    const havePermissionToThisBoard = await db
+      .select()
+      .from(userBoardResponsabiliy)
+      .where(
+        sql`${userBoardResponsabiliy.userId}=${userInfo.id} and ${userBoardResponsabiliy.boardId}=${boardId}`
+      );
+
+    if (havePermissionToThisBoard.length < 1) {
+      return <div>No tienes acceso a este tablero</div>;
+    }
+  }
 
   const [boardInfo] = await db
     .select({
