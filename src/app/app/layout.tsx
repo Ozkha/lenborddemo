@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { db as database } from "@/db";
-import { boards } from "@/db/schema";
+import { boards, userBoardResponsabiliy, users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { addBoard } from "@/actions/addboard";
 import Header from "@/components/header";
@@ -35,10 +35,37 @@ export default async function AppLayout({
 
   const user = session!.user;
   const db = await database;
-  const boardList = await db
-    .select()
-    .from(boards)
-    .where(sql`${boards.companyId}=${user.companyId}`);
+
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  if (userInfo.role == "worker") {
+    return <>{children}</>;
+  }
+
+  const sqlWhereQuery = sql`${boards.companyId}=${user.companyId}`;
+
+  const userModeratorBoardResps = await db
+    .select({ boardId: userBoardResponsabiliy.boardId })
+    .from(userBoardResponsabiliy)
+    .where(sql`${userBoardResponsabiliy.userId}=${userInfo.id}`);
+
+  userModeratorBoardResps.map(({ boardId }, index) => {
+    if (index == 0) {
+      sqlWhereQuery.append(sql`and ${boards.id}=${boardId}`);
+    } else {
+      sqlWhereQuery.append(sql`or ${boards.id}=${boardId}`);
+    }
+  });
+
+  const boardList = await db.select().from(boards).where(sqlWhereQuery);
 
   return (
     <Header user={user} boardList={boardList}>

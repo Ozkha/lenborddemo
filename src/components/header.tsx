@@ -26,76 +26,84 @@ type HeaderProps = {
   user: any;
   boardList: { id: number; name: string; companyId: number }[];
   children: React.ReactNode;
+  hideSheet?: boolean;
 };
 
-export default function Header({ user, boardList, children }: HeaderProps) {
+export default function Header({
+  user,
+  boardList,
+  children,
+  hideSheet,
+}: HeaderProps) {
   return (
     <>
       <header className="sticky z-40 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0">
-              <PanelLeftOpen className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <nav className="grid gap-6 text-lg font-medium">
-              <Link
-                href="#"
-                className="flex items-center gap-2 text-lg font-semibold"
-              >
-                <Package2 className="h-6 w-6" />
-                <span className="sr-only">Acme Inc</span>
-              </Link>
-              <Link
-                href="/app/tasks"
-                className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
-              >
-                <ListTodo className="h-5 w-5"></ListTodo>
-                Acciones
-              </Link>
-              <Link
-                href="/app/users"
-                className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
-              >
-                <Users className="h-5 w-5"></Users>
-                Usuarios
-              </Link>
-              <Link
-                href="/app/kpis"
-                className=" flex items-center gap-4 pr-2.5 hover:text-foreground"
-              >
-                <Gauge className="h-5 w-5"></Gauge>
-                KPI{"'"}s
-              </Link>
-              <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
-                Tableros
-              </p>
-              {boardList.map((boardDetails) => (
-                <Link
-                  key={"board-" + boardDetails.id}
-                  href={"/app/board?board=" + boardDetails.id}
-                  className="text-muted-foreground"
-                >
-                  {boardDetails.name}
-                </Link>
-              ))}
-              <Button
-                onClick={() => {
-                  addBoard({
-                    name: "sin nombre",
-                    companyId: Number(user.companyId),
-                  });
-                }}
-                variant={"ghost"}
-              >
-                <Plus className={"h-5 w-5 mr-2"}></Plus>
-                Nuevo Tablero
+        {!hideSheet && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="shrink-0">
+                <PanelLeftOpen className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
               </Button>
-            </nav>
-          </SheetContent>
-        </Sheet>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link
+                  href="#"
+                  className="flex items-center gap-2 text-lg font-semibold"
+                >
+                  <Package2 className="h-6 w-6" />
+                  <span className="sr-only">Acme Inc</span>
+                </Link>
+                <Link
+                  href="/app/tasks"
+                  className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <ListTodo className="h-5 w-5"></ListTodo>
+                  Acciones
+                </Link>
+                <Link
+                  href="/app/users"
+                  className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <Users className="h-5 w-5"></Users>
+                  Usuarios
+                </Link>
+                <Link
+                  href="/app/kpis"
+                  className=" flex items-center gap-4 pr-2.5 hover:text-foreground"
+                >
+                  <Gauge className="h-5 w-5"></Gauge>
+                  KPI{"'"}s
+                </Link>
+                <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
+                  Tableros
+                </p>
+                {boardList.map((boardDetails) => (
+                  <Link
+                    key={"board-" + boardDetails.id}
+                    href={"/app/board?board=" + boardDetails.id}
+                    className="text-muted-foreground"
+                  >
+                    {boardDetails.name}
+                  </Link>
+                ))}
+                <Button
+                  onClick={() => {
+                    addBoard({
+                      name: "sin nombre",
+                      companyId: Number(user.companyId),
+                    });
+                  }}
+                  variant={"ghost"}
+                >
+                  <Plus className={"h-5 w-5 mr-2"}></Plus>
+                  Nuevo Tablero
+                </Button>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        )}
 
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
