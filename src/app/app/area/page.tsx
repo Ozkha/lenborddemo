@@ -8,6 +8,7 @@ import {
   fiveWhys,
   kpiMetric_tracking,
   kpis,
+  userBoardResponsabiliy,
   users,
   wheres,
   whos,
@@ -29,6 +30,67 @@ export default async function AreaPageSuspended({ searchParams }: any) {
   const db = await database;
 
   const areaId = Number(searchParams.area);
+
+  if (!areaId) {
+    return <div>Es necesario especificar un area</div>;
+  }
+
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  const [areaInfo] = await db
+    .select({
+      id: areas.id,
+      name: areas.name,
+      board: {
+        id: boards.id,
+        name: boards.name,
+      },
+      kpi: {
+        name: kpis.name,
+      },
+    })
+    .from(areas)
+    .where(sql`${areas.id}=${areaId}`)
+    .leftJoin(boards, sql`${areas.boardId}=${boards.id}`)
+    .leftJoin(kpis, sql`${areas.kpiId}=${kpis.id}`)
+    .limit(1);
+
+  type boardInfoT = {
+    id: number;
+    name: number;
+    board: {
+      id: number;
+      name: string;
+    };
+    kpi: {
+      name: string;
+    };
+  };
+
+  if (userInfo.role == "worker") {
+    redirect("/app/tasks?user=" + userInfo.id);
+  }
+
+  if (userInfo.role == "board_moderator") {
+    const havePermissionToThisBoard = await db
+      .select()
+      .from(userBoardResponsabiliy)
+      .where(
+        sql`${userBoardResponsabiliy.userId}=${userInfo.id} and ${userBoardResponsabiliy.boardId}=${areaInfo.board?.id}`
+      );
+
+    if (havePermissionToThisBoard.length < 1) {
+      return <div>No tienes acceso a esta area</div>;
+    }
+  }
 
   const currentDate = new Date();
   const thisYear = currentDate.getFullYear();
@@ -151,35 +213,6 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       return acc;
     }, {})
   );
-  const [areaInfo] = await db
-    .select({
-      id: areas.id,
-      name: areas.name,
-      board: {
-        id: boards.id,
-        name: boards.name,
-      },
-      kpi: {
-        name: kpis.name,
-      },
-    })
-    .from(areas)
-    .where(sql`${areas.id}=${areaId}`)
-    .leftJoin(boards, sql`${areas.boardId}=${boards.id}`)
-    .leftJoin(kpis, sql`${areas.kpiId}=${kpis.id}`)
-    .limit(1);
-
-  type boardInfoT = {
-    id: number;
-    name: number;
-    board: {
-      id: number;
-      name: string;
-    };
-    kpi: {
-      name: string;
-    };
-  };
 
   const causes = await db
     .select({
