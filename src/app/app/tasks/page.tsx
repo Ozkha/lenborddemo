@@ -60,6 +60,20 @@ export default async function BooardPageSuspensed({
   const db = await database;
   const user = session.user;
 
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  if (userInfo.role == "worker") {
+    userIds = [userInfo.id.toString()];
+  }
+
   const userList = await db
     .select({
       id: users.id,
@@ -245,6 +259,7 @@ export default async function BooardPageSuspensed({
     <>
       <TasksPage
         user={user}
+        isWorker={userInfo.role == "worker" ? true : false}
         userList={userList}
         boardList={boardList}
         todoTasks={todoTasks}

@@ -403,6 +403,7 @@ type Tasks = {
 
 type TasksPageProps = {
   user: any;
+  isWorker: boolean;
   userList: {
     id: number;
     name: string | null;
@@ -422,6 +423,7 @@ type TasksPageProps = {
 };
 export default function TasksPage({
   user,
+  isWorker,
   userList,
   boardList,
   todoTasks,
@@ -442,31 +444,34 @@ export default function TasksPage({
           Acciones
         </h3>
         <div className="flex flex-wrap gap-2">
-          <FacetedFilter
-            options={userList.map((usr) => {
-              return { value: usr.id, label: usr.name as string };
-            })}
-            defaultValues={filtersDefaultValues.user.map((usrId) =>
-              Number(usrId)
-            )}
-            onChangeValues={(val) => {
-              const usersSelected = val as number[];
-              const newSrchParams = new URLSearchParams(
-                "?" + queryRoute.toString()
-              );
+          {!isWorker && (
+            <FacetedFilter
+              options={userList.map((usr) => {
+                return { value: usr.id, label: usr.name as string };
+              })}
+              defaultValues={filtersDefaultValues.user.map((usrId) =>
+                Number(usrId)
+              )}
+              onChangeValues={(val) => {
+                const usersSelected = val as number[];
+                const newSrchParams = new URLSearchParams(
+                  "?" + queryRoute.toString()
+                );
 
-              newSrchParams.delete("user");
-              usersSelected.map((usrId) => {
-                if (newSrchParams.has("user", usrId + "")) {
-                } else {
-                  newSrchParams.append("user", usrId + "");
-                }
-              });
+                newSrchParams.delete("user");
+                usersSelected.map((usrId) => {
+                  if (newSrchParams.has("user", usrId + "")) {
+                  } else {
+                    newSrchParams.append("user", usrId + "");
+                  }
+                });
 
-              setQueryRoute(newSrchParams);
-            }}
-            title="Usuario"
-          />
+                setQueryRoute(newSrchParams);
+              }}
+              title="Usuario"
+            />
+          )}
+
           <FacetedFilter
             options={boardList.map((brd) => {
               return { value: brd.id, label: brd.name };
