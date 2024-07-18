@@ -90,6 +90,7 @@ import { z } from "zod";
 type FacetedFilterProps = {
   title: string;
   options: { value: number; label: string }[];
+  optionsEnabled?: number[];
   defaultValues?: number[];
   values?: number[];
   onChangeValues: (...event: any) => void;
@@ -98,6 +99,7 @@ function FacetedFilter({
   title,
   options,
   defaultValues,
+  optionsEnabled,
   values,
   onChangeValues,
 }: FacetedFilterProps) {
@@ -145,10 +147,14 @@ function FacetedFilter({
                 } else {
                   isSelected = innerValues.includes(option.value);
                 }
-
                 return (
                   <CommandItem
                     key={"key-" + option.value}
+                    disabled={
+                      optionsEnabled
+                        ? !optionsEnabled.includes(option.value)
+                        : false
+                    }
                     onSelect={() => {
                       if (isSelected) {
                         if (values) {
@@ -220,6 +226,7 @@ type UsersPageProps = {
     value: number;
     label: string;
   }[];
+  respsItHas: number[];
   userList: {
     id: number;
     username: string;
@@ -239,6 +246,7 @@ export default function UsersPage({
   userRole,
   userList,
   boardList,
+  respsItHas,
 }: UsersPageProps) {
   const [isChangePassActive, setIsChangePassActive] = useState(false);
   const [hidePass, setHidePass] = useState(true);
@@ -308,115 +316,121 @@ export default function UsersPage({
           <CardDescription>Manejador de roles de usuarios</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full flex justify-end">
-            <Dialog>
-              <DialogTrigger>
-                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                  Nuevo Usuario
-                </div>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Nuevo Usuario</DialogTitle>
-                </DialogHeader>
-                <Form {...addUserForm}>
-                  <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)}>
-                    <FormField
-                      control={addUserForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Nombre" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={addUserForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Usuario</FormLabel>
-                          <FormControl>
-                            <Input placeholder="usuario" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={addUserForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contraseña</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={addUserForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rol</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+          {userRole == "admin" && (
+            <div className="w-full flex justify-end">
+              <Dialog>
+                <DialogTrigger>
+                  <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    Nuevo Usuario
+                  </div>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nuevo Usuario</DialogTitle>
+                  </DialogHeader>
+                  <Form {...addUserForm}>
+                    <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)}>
+                      <FormField
+                        control={addUserForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nombre</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecciona un Rol" />
-                              </SelectTrigger>
+                              <Input placeholder="Nombre" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="worker">Trabajador</SelectItem>
-                              <SelectItem value="board_moderator">
-                                Manager de Tablero
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={addUserForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Usuario</FormLabel>
+                            <FormControl>
+                              <Input placeholder="usuario" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={addUserForm.control}
-                      name="boardsIDsThatParticipate"
-                      render={({ field }) => (
-                        <FormItem className="w-full flex flex-col justify-center mt-6">
-                          <FormControl>
-                            <FacetedFilter
-                              title="Tableros"
-                              values={field.value}
-                              onChangeValues={field.onChange}
-                              options={boardList}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Tableros en los que participara de acuerdo a su Rol
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button className="w-full mt-6" type="submit">
-                      Crear Usuario
-                    </Button>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                      <FormField
+                        control={addUserForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contraseña</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={addUserForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rol</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona un Rol" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="worker">
+                                  Trabajador
+                                </SelectItem>
+                                <SelectItem value="board_moderator">
+                                  Manager de Tablero
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={addUserForm.control}
+                        name="boardsIDsThatParticipate"
+                        render={({ field }) => (
+                          <FormItem className="w-full flex flex-col justify-center mt-6">
+                            <FormControl>
+                              <FacetedFilter
+                                title="Tableros"
+                                values={field.value}
+                                onChangeValues={field.onChange}
+                                options={boardList}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Tableros en los que participara de acuerdo a su
+                              Rol
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button className="w-full mt-6" type="submit">
+                        Crear Usuario
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -542,7 +556,11 @@ export default function UsersPage({
                           defaultValue={LUser.role.toLowerCase()}
                         >
                           <SelectTrigger
-                            disabled={LUser.role == "admin" ? true : false}
+                            disabled={
+                              LUser.role == "admin" || userRole !== "admin"
+                                ? true
+                                : false
+                            }
                             className="w-full"
                           >
                             <SelectValue />
@@ -555,22 +573,43 @@ export default function UsersPage({
                             <SelectItem value="worker">Trabajador</SelectItem>
                           </SelectContent>
                         </Select>
-                        {LUser.role == "admin" ? undefined : (
-                          <FacetedFilter
-                            title="Tableros"
-                            defaultValues={LUser.userBoardResponsability.map(
-                              (boardResp) => {
-                                return boardResp.boardId;
+                        {LUser.role == "admin"
+                          ? undefined
+                          : (() => {
+                              if (
+                                LUser.role == "board_moderator" &&
+                                userRole == "board_moderator"
+                              ) {
+                                return undefined;
                               }
-                            )}
-                            onChangeValues={(val) => {
-                              const newBoardsRespIds: number[] = val;
-                              changeUserBoardResps(LUser.id, newBoardsRespIds);
-                              console.log("Cambio value: ", newBoardsRespIds);
-                            }}
-                            options={boardList}
-                          />
-                        )}
+                              return (
+                                <FacetedFilter
+                                  title="Tableros"
+                                  defaultValues={LUser.userBoardResponsability.map(
+                                    (boardResp) => {
+                                      return boardResp.boardId;
+                                    }
+                                  )}
+                                  onChangeValues={(val) => {
+                                    const newBoardsRespIds: number[] = val;
+                                    changeUserBoardResps(
+                                      LUser.id,
+                                      newBoardsRespIds
+                                    );
+                                    console.log(
+                                      "Cambio value: ",
+                                      newBoardsRespIds
+                                    );
+                                  }}
+                                  options={boardList}
+                                  optionsEnabled={
+                                    userRole == "board_moderator"
+                                      ? respsItHas
+                                      : undefined
+                                  }
+                                />
+                              );
+                            })()}
                         <Button
                           onClick={() => {
                             setIsChangePassActive(!isChangePassActive);

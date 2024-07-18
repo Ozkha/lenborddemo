@@ -18,6 +18,21 @@ export default async function BooardPageSuspensed() {
 
   const db = await database;
   const user = session.user;
+
+  const [userInfo] = await db
+    .select({
+      id: users.id,
+      username: users.id,
+      role: users.role,
+      status: users.status,
+    })
+    .from(users)
+    .where(sql`${users.id}=${user.id}`);
+
+  if (userInfo.role == "worker") {
+    redirect("/app/tasks?user=" + userInfo.id);
+  }
+
   const userRole = await db
     .select({ role: users.role })
     .from(users)
@@ -84,10 +99,21 @@ export default async function BooardPageSuspensed() {
     }, {})
   );
 
+  const thisUserBoardResps = await db
+    .select({ boardId: userBoardResponsabiliy.boardId })
+    .from(userBoardResponsabiliy)
+    .where(sql`${userBoardResponsabiliy.userId}=${userInfo.id}`);
+
   const boardList = await db
     .select({ value: boards.id, label: boards.name })
     .from(boards)
     .where(sql`${boards.companyId}=${user.companyId}`);
+
+  let respsItHas: number[] = [];
+
+  if (userInfo.role == "board_moderator") {
+    respsItHas = thisUserBoardResps.map(({ boardId }) => boardId);
+  }
 
   return (
     <>
@@ -96,6 +122,7 @@ export default async function BooardPageSuspensed() {
         user={user}
         userRole={userRole[0].role}
         userList={userList}
+        respsItHas={respsItHas}
       ></UsersPage>
     </>
   );
