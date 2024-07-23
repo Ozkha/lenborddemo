@@ -78,7 +78,7 @@ export default async function BooardPageSuspensed() {
     goalCratedAt: Date;
     goal: {
       label: "success" | "fail" | "mid";
-      operator: "<" | ">" | ">=" | "<=";
+      operator: ">" | "<=";
       amount: number;
     }[];
   }[];

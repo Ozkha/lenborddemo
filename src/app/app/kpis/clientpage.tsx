@@ -65,7 +65,7 @@ import { z } from "zod";
 type CategoryBarProps = {
   data: {
     label: "success" | "fail" | "mid";
-    operator: "<" | ">" | ">=" | "<=";
+    operator: ">" | "<=";
     amount: number;
   }[];
   className?: string;
@@ -108,18 +108,54 @@ const kpiFormSchema = z.object({
     .array(
       z.object({
         label: z.enum(["success", "fail", "mid"]),
-        operator: z.enum(["<", ">", ">=", "<="]),
+        operator: z.enum([">", "<="]),
         amount: z.number(),
       })
     )
     .min(2, { message: "Debe haber por lo menos 2 elementos" })
-    .refine((data) => data[1].amount >= data[0].amount, {
-      message: "El segundo elemento debe ser mayor o igual al primero",
-    })
-    .refine((data) => data.length < 3 || data[2].amount >= data[1].amount, {
-      message:
-        "Si hay un tercer elemento,  debe ser mayor o igul que el del segundo.",
-    }),
+    .refine(
+      (data) => {
+        if (data.length > 2) {
+          return true;
+        }
+        if (data[1].amount == data[0].amount) {
+          return true;
+        }
+        return false;
+      },
+      {
+        message: "El segundo elemento debe ser igual al primero",
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.length < 3) {
+          return true;
+        }
+        if (data[1].amount > data[0].amount) {
+          return true;
+        }
+
+        return false;
+      },
+      {
+        message: "El segundo elemento debe ser mayor al primero",
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.length < 3) {
+          return true;
+        }
+        if (data[2].amount == data[1].amount) {
+          return true;
+        }
+        return false;
+      },
+      {
+        message: "El segundo y tercer elemento deben tener el mismo valor",
+      }
+    ),
 });
 
 const kpiUpdateFormSchema = z.object({
@@ -128,18 +164,54 @@ const kpiUpdateFormSchema = z.object({
     .array(
       z.object({
         label: z.enum(["success", "fail", "mid"]),
-        operator: z.enum(["<", ">", ">=", "<="]),
+        operator: z.enum([">", "<="]),
         amount: z.number(),
       })
     )
     .min(2, { message: "Debe haber por lo menos 2 elementos" })
-    .refine((data) => data[1].amount >= data[0].amount, {
-      message: "El segundo elemento debe ser mayor o igual al primero",
-    })
-    .refine((data) => data.length < 3 || data[2].amount >= data[1].amount, {
-      message:
-        "Si hay un tercer elemento,  debe ser mayor o igul que el del segundo.",
-    }),
+    .refine(
+      (data) => {
+        if (data.length > 2) {
+          return true;
+        }
+        if (data[1].amount == data[0].amount) {
+          return true;
+        }
+        return false;
+      },
+      {
+        message: "El segundo elemento debe ser igual al primero",
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.length < 3) {
+          return true;
+        }
+        if (data[1].amount > data[0].amount) {
+          return true;
+        }
+
+        return false;
+      },
+      {
+        message: "El segundo elemento debe ser mayor al primero",
+      }
+    )
+    .refine(
+      (data) => {
+        if (data.length < 3) {
+          return true;
+        }
+        if (data[2].amount == data[1].amount) {
+          return true;
+        }
+        return false;
+      },
+      {
+        message: "El segundo y tercer elemento deben tener el mismo valor",
+      }
+    ),
 });
 
 type KpisPageProps = {
@@ -153,7 +225,7 @@ type KpisPageProps = {
     goalCratedAt: Date;
     goal: {
       label: "success" | "fail" | "mid";
-      operator: "<" | ">" | ">=" | "<=";
+      operator: ">" | "<=";
       amount: number;
     }[];
   }[];
@@ -169,17 +241,17 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
       goal: [
         {
           label: "success",
-          operator: "<",
+          operator: "<=",
           amount: 1,
         },
         {
           label: "mid",
-          operator: "<",
+          operator: "<=",
           amount: 2,
         },
         {
           label: "fail",
-          operator: ">=",
+          operator: ">",
           amount: 2,
         },
       ],
@@ -242,11 +314,11 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
 
   const [midValAux, setMidValAux] = useState<{
     label: "success" | "mid" | "fail";
-    operator: "<" | ">" | "<=" | ">=";
+    operator: "<=" | ">";
     amount: number;
   }>({
     label: "mid",
-    operator: "<",
+    operator: "<=",
     amount: 2,
   });
 
@@ -365,60 +437,6 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
                                       key={"formI" + index}
                                       className=" flex items-center  justify-center gap-1 w-full"
                                     >
-                                      <Select
-                                        onValueChange={(newOperator) => {
-                                          const updatedState = [...field.value];
-
-                                          const stateToModify =
-                                            updatedState[index];
-
-                                          stateToModify.operator =
-                                            newOperator as
-                                              | "<"
-                                              | ">"
-                                              | "<="
-                                              | ">=";
-
-                                          field.onChange(updatedState);
-                                        }}
-                                        // value={field.value[index].operator}
-                                        defaultValue={
-                                          field.value[index].operator
-                                        }
-                                      >
-                                        <SelectTrigger className="mt-2">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {index == 0 ||
-                                          index < field.value.length - 1 ? (
-                                            <>
-                                              <SelectItem value="<">
-                                                {"<"}
-                                              </SelectItem>
-                                              <SelectItem value="<=">
-                                                {"<="}
-                                              </SelectItem>
-                                            </>
-                                          ) : (
-                                            <></>
-                                          )}
-
-                                          {index == field.value.length - 1 ? (
-                                            <>
-                                              {" "}
-                                              <SelectItem value=">">
-                                                {">"}
-                                              </SelectItem>
-                                              <SelectItem value=">=">
-                                                {">="}
-                                              </SelectItem>
-                                            </>
-                                          ) : (
-                                            <></>
-                                          )}
-                                        </SelectContent>
-                                      </Select>
                                       <Input
                                         type="number"
                                         defaultValue={field.value[index].amount}
@@ -432,6 +450,22 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
 
                                           stateToModify.amount =
                                             Number(valueInput);
+
+                                          if (index == 0) {
+                                            stateToModify.operator = "<=";
+                                          }
+                                          if (field.value.length > 2) {
+                                            if (index == 1) {
+                                              stateToModify.operator = "<=";
+                                            }
+                                            if (index == 2) {
+                                              stateToModify.operator = ">";
+                                            }
+                                          } else {
+                                            if (index == 1) {
+                                              stateToModify.operator = ">";
+                                            }
+                                          }
 
                                           field.onChange(updatedState);
                                         }}
@@ -621,71 +655,6 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
                                                     key={"formI" + index}
                                                     className=" flex items-center  justify-center gap-1 w-full"
                                                   >
-                                                    <Select
-                                                      onValueChange={(
-                                                        newOperator
-                                                      ) => {
-                                                        const updatedState = [
-                                                          ...field.value,
-                                                        ];
-
-                                                        const stateToModify =
-                                                          updatedState[index];
-
-                                                        stateToModify.operator =
-                                                          newOperator as
-                                                            | "<"
-                                                            | ">"
-                                                            | "<="
-                                                            | ">=";
-
-                                                        field.onChange(
-                                                          updatedState
-                                                        );
-                                                      }}
-                                                      // value={field.value[index].operator}
-                                                      defaultValue={
-                                                        field.value[index]
-                                                          .operator
-                                                      }
-                                                    >
-                                                      <SelectTrigger className="mt-2">
-                                                        <SelectValue />
-                                                      </SelectTrigger>
-                                                      <SelectContent>
-                                                        {index == 0 ||
-                                                        index <
-                                                          field.value.length -
-                                                            1 ? (
-                                                          <>
-                                                            <SelectItem value="<">
-                                                              {"<"}
-                                                            </SelectItem>
-                                                            <SelectItem value="<=">
-                                                              {"<="}
-                                                            </SelectItem>
-                                                          </>
-                                                        ) : (
-                                                          <></>
-                                                        )}
-
-                                                        {index ==
-                                                        field.value.length -
-                                                          1 ? (
-                                                          <>
-                                                            {" "}
-                                                            <SelectItem value=">">
-                                                              {">"}
-                                                            </SelectItem>
-                                                            <SelectItem value=">=">
-                                                              {">="}
-                                                            </SelectItem>
-                                                          </>
-                                                        ) : (
-                                                          <></>
-                                                        )}
-                                                      </SelectContent>
-                                                    </Select>
                                                     <Input
                                                       type="number"
                                                       defaultValue={
@@ -705,6 +674,28 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
 
                                                         stateToModify.amount =
                                                           Number(valueInput);
+
+                                                        if (index == 0) {
+                                                          stateToModify.operator =
+                                                            "<=";
+                                                        }
+                                                        if (
+                                                          field.value.length > 2
+                                                        ) {
+                                                          if (index == 1) {
+                                                            stateToModify.operator =
+                                                              "<=";
+                                                          }
+                                                          if (index == 2) {
+                                                            stateToModify.operator =
+                                                              ">";
+                                                          }
+                                                        } else {
+                                                          if (index == 1) {
+                                                            stateToModify.operator =
+                                                              ">";
+                                                          }
+                                                        }
 
                                                         field.onChange(
                                                           updatedState

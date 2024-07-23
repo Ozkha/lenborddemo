@@ -88,7 +88,7 @@ export const kpiGoals = mysqlTable("kpi_goals", {
     .$type<
       {
         label: "success" | "fail" | "mid";
-        operator: "<" | ">" | ">=" | "<=";
+        operator: ">" | "<=";
         amount: number;
       }[]
     >()

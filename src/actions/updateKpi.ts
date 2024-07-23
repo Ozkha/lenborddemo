@@ -9,7 +9,7 @@ type addKpiProps = {
 
   newGoal: {
     label: "success" | "fail" | "mid";
-    operator: "<" | ">" | ">=" | "<=";
+    operator: ">" | "<=";
     amount: number;
   }[];
 };
@@ -17,14 +17,6 @@ type addKpiProps = {
 // TODO: Validacion
 export default async function updateKpi({ id, newGoal }: addKpiProps) {
   const db = await database;
-
-  //   Peuqenia validacion rapida
-  if (newGoal[0].operator == ">") {
-    throw new Error("First Goal operator invalid");
-  }
-  if (newGoal[0].operator == ">=") {
-    throw new Error("First Goal operator invalid");
-  }
 
   const newKpiGoa: newKpiGoal = {
     kpi_id: id,

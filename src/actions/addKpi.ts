@@ -10,7 +10,7 @@ type addKpiProps = {
   companyId: number;
   goal: {
     label: "success" | "fail" | "mid";
-    operator: "<" | ">" | ">=" | "<=";
+    operator: ">" | "<=";
     amount: number;
   }[];
 };
@@ -35,14 +35,6 @@ export default async function addKpi({
 
   const kpiAdded = await db.insert(kpis).values(newKpi);
   const kpiAddedInsertId = kpiAdded[0].insertId;
-
-  //   Peuqenia validacion rapida
-  if (goal[0].operator == ">") {
-    throw new Error("First Goal operator invalid");
-  }
-  if (goal[0].operator == ">=") {
-    throw new Error("First Goal operator invalid");
-  }
 
   const newKpiGoa: newKpiGoal = {
     kpi_id: kpiAddedInsertId,
