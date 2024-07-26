@@ -68,6 +68,17 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
 import { addTask } from "@/actions/addTask";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { get5wDateTotalEntries } from "@/actions/get5wDateTotalEntries";
+
+// TODO:
+// Me falto que se hiciera funcional la pestania de ajustes en area page.
 
 type AreaPageProps = {
   user: any;
@@ -192,6 +203,25 @@ export default function AreaPage({
 
   const [w5Page, setW5Page] = useState(0);
   const [current5why, setCurrent5Why] = useState(fivewhysFirstDump);
+
+  const [specificDay5WDialogOpen, setSpecificDay5WDialogOpen] = useState(false);
+  const [specific5wsDate, setSpecific5wsDate] = useState<Date | undefined>(
+    undefined
+  );
+  const [currentSpecific5w, setCurrentSpecific5W] = useState<
+    | {
+        date: Date;
+        what: string;
+        where: string | null;
+        who: string | null;
+        why: string | null;
+        whyDetails: string | null;
+      }
+    | undefined
+  >(undefined);
+  const [specificw5Page, setSpecificW5Page] = useState(0);
+  const [specificw5MaxPages, setSpecificW5MaxPages] = useState(0);
+
   if (areaInfo.id == null) {
     return (
       <main className="p-4 sm:px-6 sm:py-0">
@@ -227,7 +257,7 @@ export default function AreaPage({
             <TabsTrigger value="dashboard" className="w-full">
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="settings" className="w-full">
+            <TabsTrigger disabled value="settings" className="w-full">
               Ajustes
             </TabsTrigger>
           </TabsList>
@@ -261,13 +291,40 @@ export default function AreaPage({
                   </CardHeader>
                   <CardContent>
                     <Tracker
+                      onClick={async (day) => {
+                        // TODO:
+                        // 2. Al darle click se haran query de los datos especificos de esos dias
+                        // 3. Se haran lo mismo que el 5w card que esta en el normal.
+                        console.log("Click - ", day);
+                        const newDate = new Date(
+                          areaSelectedDateData.date.getFullYear(),
+                          areaCurrentDateData.date.getMonth(),
+                          day
+                        );
+                        setSpecific5wsDate(newDate);
+                        setSpecificW5MaxPages(
+                          await get5wDateTotalEntries(areaInfo.id, newDate)
+                        );
+                        const dumps = await get5wdump(0, areaInfo.id, newDate);
+                        console.log(dumps);
+
+                        if (dumps) {
+                          setCurrentSpecific5W(dumps[0]);
+                        }
+
+                        setSpecificDay5WDialogOpen(true);
+                      }}
                       data={(() => {
                         let finalData: { color: string; tooltip: string }[] =
                           [];
 
-                        for (let i = 0; i < areaSelectedDateData.maxDays; i++) {
+                        for (
+                          let i = 1;
+                          i <= areaSelectedDateData.maxDays;
+                          i++
+                        ) {
                           const val = areaSelectedDateData.data.find(
-                            (dayData) => i + 1 === dayData.day
+                            (dayData) => i === dayData.day
                           );
                           if (val) {
                             if (val.status == null) val.status = "empty";
@@ -303,9 +360,9 @@ export default function AreaPage({
                         let finalData: { color: string; tooltip: string }[] =
                           [];
 
-                        for (let i = 0; i < areaCurrentDateData.maxDays; i++) {
+                        for (let i = 1; i <= areaCurrentDateData.maxDays; i++) {
                           const val = areaCurrentDateData.data.find(
-                            (dayData) => i + 1 === dayData.day
+                            (dayData) => i === dayData.day
                           );
                           if (val) {
                             if (val.status == null) val.status = "empty";
@@ -756,6 +813,142 @@ export default function AreaPage({
           </div>
         </TabsContent>
       </Tabs>
+      <Dialog
+        open={specificDay5WDialogOpen}
+        onOpenChange={(opn) => {
+          setSpecific5wsDate(undefined);
+          setSpecificW5MaxPages(0);
+          setCurrentSpecific5W(undefined);
+          setSpecificDay5WDialogOpen(opn);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              5W -{" "}
+              {specific5wsDate?.toLocaleDateString("es-MX", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-start bg-muted/50">
+              <div className="grid gap-0.5">
+                <CardTitle className="group flex items-center gap-2 text-lg">
+                  5W
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  {currentSpecific5w
+                    ? currentSpecific5w.date.toLocaleDateString("es-MX", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "Vacio"}
+                </CardDescription>
+              </div>
+              <div className="ml-auto flex items-center gap-1">
+                <p className="mr-4 text-sm">
+                  {specificw5Page + 1} / {specificw5MaxPages}
+                </p>
+                {currentSpecific5w ? (
+                  <Pagination className="ml-auto mr-0 w-auto">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6"
+                          onClick={async () => {
+                            if (specificw5Page - 1 < 0) {
+                            } else {
+                              const dumps = await get5wdump(
+                                specificw5Page - 1,
+                                areaInfo.id
+                              );
+                              if (dumps) {
+                                setCurrentSpecific5W(dumps[0]);
+                              }
+                              setSpecificW5Page(specificw5Page - 1);
+                            }
+                          }}
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                          <span className="sr-only">Previous Order</span>
+                        </Button>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6"
+                          onClick={async () => {
+                            if (specificw5Page + 1 > specificw5MaxPages) {
+                            } else {
+                              const dumps = await get5wdump(
+                                specificw5Page + 1,
+                                areaInfo.id
+                              );
+                              if (dumps) {
+                                setCurrentSpecific5W(dumps[0]);
+                              }
+                              setSpecificW5Page(specificw5Page + 1);
+                            }
+                          }}
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                          <span className="sr-only">Next Order</span>
+                        </Button>
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                ) : (
+                  <></>
+                )}
+              </div>
+            </CardHeader>
+            {currentSpecific5w ? (
+              <CardContent className="p-6 text-sm">
+                <div className="grid gap-3">
+                  <div className="font-semibold">Que?</div>
+                  <p className="text-muted-foreground">
+                    {currentSpecific5w.what}
+                  </p>
+                </div>
+                <Separator className="my-4" />
+                <div className="grid gap-3">
+                  <div className="font-semibold">Donde?</div>
+                  <div>
+                    <Badge>{currentSpecific5w.where}</Badge>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="grid gap-3">
+                  <div className="font-semibold">Quien?</div>
+                  <div>
+                    <Badge>{currentSpecific5w.who}</Badge>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="grid gap-3">
+                  <div className="font-semibold">Porque / Causa?</div>
+                  <div className="flex gap-2">
+                    <Badge>{currentSpecific5w.why}</Badge>
+                  </div>
+                  <p>Descripcion:</p>
+                  <p className="text-muted-foreground text-sm">
+                    {currentSpecific5w.whyDetails}
+                  </p>
+                </div>
+              </CardContent>
+            ) : (
+              <></>
+            )}
+          </Card>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

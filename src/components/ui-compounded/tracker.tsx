@@ -10,19 +10,25 @@ import {
 type TrackerProps = {
   data: { color: string; tooltip: string }[];
   className?: string;
+  onClick?: (index: number) => void;
 };
 
 /**
  * @param {data} data.color - Its a utility class from TailwindCSS like bg-blue-400
  **/
 
-export function Tracker({ data, className }: TrackerProps) {
+export function Tracker({ data, className, onClick }: TrackerProps) {
   return (
     <div className={cn(["h-10 flex items-center space-x-0.5", className])}>
       <TooltipProvider>
         {data.map((val, index) => (
           <Tooltip key={"tracker-" + index}>
-            <TooltipTrigger asChild>
+            <TooltipTrigger
+              onClick={() => {
+                onClick ? onClick(index) : undefined;
+              }}
+              asChild
+            >
               <div
                 className="w-full h-full rounded-[1px] first:rounded-l-[4px] last:rounded-r-[4px]"
                 style={{

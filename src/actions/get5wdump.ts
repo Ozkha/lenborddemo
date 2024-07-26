@@ -3,8 +3,27 @@ import { db as database } from "@/db";
 import { fiveWhys, wheres, whos, whys } from "@/db/schema";
 import { sql } from "drizzle-orm";
 
-export async function get5wdump(index: number, areaId: number) {
+export async function get5wdump(index: number, areaId: number, date?: Date) {
   const db = await database;
+
+  const defaultWhereQuery = sql`${fiveWhys.areaId}=${areaId}`;
+
+  console.log(
+    "🚀 Date: " +
+      date?.getFullYear() +
+      " - " +
+      date?.getMonth() +
+      " - " +
+      date?.getDate()
+  );
+
+  if (date) {
+    defaultWhereQuery.append(
+      sql` and year(${fiveWhys.date}) = ${date.getFullYear()} and month(${
+        fiveWhys.date
+      }) = ${date.getMonth() + 1} and day(${fiveWhys.date}) = ${date.getDate()}`
+    );
+  }
 
   const fiveDump = await db
     .select({
@@ -16,7 +35,7 @@ export async function get5wdump(index: number, areaId: number) {
       whyDetails: fiveWhys.whyDetails,
     })
     .from(fiveWhys)
-    .where(sql`${fiveWhys.areaId}=${areaId}`)
+    .where(defaultWhereQuery)
     .limit(1)
     .offset(index)
     .leftJoin(wheres, sql`${wheres.id}=${fiveWhys.whereId}`)
