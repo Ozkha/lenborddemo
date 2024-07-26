@@ -360,6 +360,7 @@ export default function BoardPage({
                 maxLength={dateInfo.maxDays}
                 title={area.name}
                 onClickCell={(day) => {
+                  console.log("🚀day: ", day);
                   const dayData = area.data.find((dat) => dat.day === day);
 
                   setAreaModalInfo({
@@ -384,11 +385,6 @@ export default function BoardPage({
                     dateInfo.month - 1,
                     day
                   );
-                  const ahora = new Date();
-                  fecha.setHours(ahora.getHours());
-                  fecha.setMinutes(ahora.getMinutes());
-                  fecha.setSeconds(ahora.getSeconds());
-                  fecha.setMilliseconds(ahora.getMilliseconds());
                   addNew5WhysEntryForm.setValue("when", fecha);
 
                   if (dayData) {
