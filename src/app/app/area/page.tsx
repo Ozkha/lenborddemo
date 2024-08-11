@@ -243,7 +243,9 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       whyDetails: fiveWhys.whyDetails,
     })
     .from(fiveWhys)
-    .where(sql`${fiveWhys.areaId}=${areaId}`)
+    .where(
+      sql`${fiveWhys.companyId}=${user.companyId} and year(${fiveWhys.date}) = ${yrSlctd} and month(${fiveWhys.date}) = ${mthSlctd} and ${fiveWhys.areaId}=${areaId}`
+    )
     .limit(1)
     .leftJoin(wheres, sql`${wheres.id}=${fiveWhys.whereId}`)
     .leftJoin(whos, sql`${whos.id}=${fiveWhys.whoId}`)
