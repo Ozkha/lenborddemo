@@ -15,6 +15,7 @@ import {
   whys,
 } from "@/db/schema";
 import { asc, count, desc, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 export default async function AreaPageSuspended({ searchParams }: any) {
   const session = await auth();
 
@@ -231,9 +232,24 @@ export default async function AreaPageSuspended({ searchParams }: any) {
   const [maxFiveWhyDumps] = await db
     .select({ val: count() })
     .from(fiveWhys)
-    .where(sql`${fiveWhys.areaId}=${areaId}`);
+    .where(
+      sql`${fiveWhys.areaId}=${areaId} and year(${fiveWhys.date}) = ${yrSlctd} and month(${fiveWhys.date}) = ${mthSlctd}`
+    );
 
-  const [firstfiveDump] = await db
+  let fiveDumpPage = Number(searchParams.page);
+  if (!fiveDumpPage) {
+    if (maxFiveWhyDumps.val > 0) {
+      fiveDumpPage = 1;
+    } else {
+      fiveDumpPage = 0;
+    }
+  } else {
+    if (fiveDumpPage >= maxFiveWhyDumps.val) {
+      fiveDumpPage = maxFiveWhyDumps.val;
+    }
+  }
+
+  const [currentFiveWhyDump] = await db
     .select({
       date: fiveWhys.date,
       what: fiveWhys.what,
@@ -247,6 +263,7 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       sql`${fiveWhys.companyId}=${user.companyId} and year(${fiveWhys.date}) = ${yrSlctd} and month(${fiveWhys.date}) = ${mthSlctd} and ${fiveWhys.areaId}=${areaId}`
     )
     .limit(1)
+    .offset(fiveDumpPage - 1 < 0 ? 0 : fiveDumpPage - 1)
     .leftJoin(wheres, sql`${wheres.id}=${fiveWhys.whereId}`)
     .leftJoin(whos, sql`${whos.id}=${fiveWhys.whoId}`)
     .leftJoin(whys, sql`${whys.id}=${fiveWhys.whyId}`);
@@ -258,12 +275,15 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       sql`${users.role}<>'admin' and ${users.companyId}=${user.companyId}`
     );
 
+  console.log("🧨 Date selected: ", dateSelected);
+
   return (
     <>
       <AreaPage
         areaInfo={areaInfo as unknown as boardInfoT}
         maxfivedumps={maxFiveWhyDumps.val}
-        fivewhysFirstDump={firstfiveDump || undefined}
+        currentFiveDumpsPage={fiveDumpPage}
+        currentFiveDump={currentFiveWhyDump || undefined}
         areaCurrentDateData={{
           ...areaThisMonthYearData[0],
           maxDays: thisMonthMaxDays,

@@ -61,7 +61,7 @@ import {
   SquareCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
@@ -117,7 +117,8 @@ type AreaPageProps = {
     name: string;
     frecuency: number;
   }[];
-  fivewhysFirstDump:
+  currentFiveDumpsPage: number;
+  currentFiveDump:
     | {
         date: Date;
         what: string;
@@ -153,8 +154,9 @@ export default function AreaPage({
   areaSelectedDateData,
   causes,
   areaInfo,
+  currentFiveDumpsPage,
   maxfivedumps,
-  fivewhysFirstDump,
+  currentFiveDump,
   userList,
 }: AreaPageProps) {
   const router = useRouter();
@@ -196,13 +198,15 @@ export default function AreaPage({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Error al asignar la <ion-textarea></ion-textarea>",
+        description: "Error al asignar la accion",
       });
     }
   }
 
   const [w5Page, setW5Page] = useState(0);
-  const [current5why, setCurrent5Why] = useState(fivewhysFirstDump);
+  // FIXME: Error en que cuando cambio de fecha en la page, no refresca. Yo creo que deberia
+  // otra hipotesis: Arreglarlemas para no usar el react.state y mejor solamente
+  // el revalidatePath.
 
   const [specificDay5WDialogOpen, setSpecificDay5WDialogOpen] = useState(false);
   const [specific5wsDate, setSpecific5wsDate] = useState<Date | undefined>(
@@ -665,8 +669,8 @@ export default function AreaPage({
                       5W
                     </CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">
-                      {current5why
-                        ? current5why.date.toLocaleDateString("es-MX", {
+                      {currentFiveDump
+                        ? currentFiveDump.date.toLocaleDateString("es-MX", {
                             day: "numeric",
                             month: "long",
                             year: "numeric",
@@ -676,9 +680,9 @@ export default function AreaPage({
                   </div>
                   <div className="ml-auto flex items-center gap-1">
                     <p className="mr-4 text-sm">
-                      {w5Page + 1} / {maxfivedumps}
+                      {currentFiveDumpsPage} / {maxfivedumps}
                     </p>
-                    {current5why ? (
+                    {currentFiveDump ? (
                       <Pagination className="ml-auto mr-0 w-auto">
                         <PaginationContent>
                           <PaginationItem>
@@ -687,17 +691,16 @@ export default function AreaPage({
                               variant="outline"
                               className="h-6 w-6"
                               onClick={async () => {
-                                if (w5Page - 1 < 0) {
-                                } else {
-                                  const dumps = await get5wdump(
-                                    w5Page - 1,
-                                    areaInfo.id
-                                  );
-                                  if (dumps) {
-                                    setCurrent5Why(dumps[0]);
-                                  }
-                                  setW5Page(w5Page - 1);
-                                }
+                                const newUrl =
+                                  "/app/area?area=" +
+                                  areaInfo.id +
+                                  "&year=" +
+                                  areaSelectedDateData.date.getFullYear() +
+                                  "&month=" +
+                                  (areaSelectedDateData.date.getMonth() + 1) +
+                                  "&page=" +
+                                  (currentFiveDumpsPage - 1);
+                                router.replace(newUrl);
                               }}
                             >
                               <ChevronLeft className="h-3.5 w-3.5" />
@@ -710,17 +713,16 @@ export default function AreaPage({
                               variant="outline"
                               className="h-6 w-6"
                               onClick={async () => {
-                                if (w5Page + 1 > maxfivedumps) {
-                                } else {
-                                  const dumps = await get5wdump(
-                                    w5Page + 1,
-                                    areaInfo.id
-                                  );
-                                  if (dumps) {
-                                    setCurrent5Why(dumps[0]);
-                                  }
-                                  setW5Page(w5Page + 1);
-                                }
+                                const newUrl =
+                                  "/app/area?area=" +
+                                  areaInfo.id +
+                                  "&year=" +
+                                  areaSelectedDateData.date.getFullYear() +
+                                  "&month=" +
+                                  (areaSelectedDateData.date.getMonth() + 1) +
+                                  "&page=" +
+                                  (currentFiveDumpsPage + 1);
+                                router.replace(newUrl);
                               }}
                             >
                               <ChevronRight className="h-3.5 w-3.5" />
@@ -734,37 +736,37 @@ export default function AreaPage({
                     )}
                   </div>
                 </CardHeader>
-                {current5why ? (
+                {currentFiveDump ? (
                   <CardContent className="p-6 text-sm">
                     <div className="grid gap-3">
                       <div className="font-semibold">Que?</div>
                       <p className="text-muted-foreground">
-                        {current5why.what}
+                        {currentFiveDump.what}
                       </p>
                     </div>
                     <Separator className="my-4" />
                     <div className="grid gap-3">
                       <div className="font-semibold">Donde?</div>
                       <div>
-                        <Badge>{current5why.where}</Badge>
+                        <Badge>{currentFiveDump.where}</Badge>
                       </div>
                     </div>
                     <Separator className="my-4" />
                     <div className="grid gap-3">
                       <div className="font-semibold">Quien?</div>
                       <div>
-                        <Badge>{current5why.who}</Badge>
+                        <Badge>{currentFiveDump.who}</Badge>
                       </div>
                     </div>
                     <Separator className="my-4" />
                     <div className="grid gap-3">
                       <div className="font-semibold">Porque / Causa?</div>
                       <div className="flex gap-2">
-                        <Badge>{current5why.why}</Badge>
+                        <Badge>{currentFiveDump.why}</Badge>
                       </div>
                       <p>Descripcion:</p>
                       <p className="text-muted-foreground text-sm">
-                        {current5why.whyDetails}
+                        {currentFiveDump.whyDetails}
                       </p>
                     </div>
                   </CardContent>
