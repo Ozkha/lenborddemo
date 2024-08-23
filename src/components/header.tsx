@@ -23,7 +23,8 @@ import {
 } from "./ui/dropdown-menu";
 import { signOutServer } from "@/lib/signout";
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   user: any;
@@ -39,6 +40,7 @@ export default function Header({
   hideSheet,
 }: HeaderProps) {
   const searchParams = useSearchParams();
+  const pathName = usePathname();
 
   const boardId = searchParams.get("board");
 
@@ -60,25 +62,40 @@ export default function Header({
                   className="flex items-center gap-2 text-lg font-semibold"
                 >
                   <Package2 className="h-6 w-6" />
-                  <span className="sr-only">Acme Inc</span>
+                  <span className="sr-only">Lenbord</span>
                 </Link>
                 <Link
                   href="/app/tasks"
-                  className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
+                  className={cn([
+                    "flex items-center gap-4 pr-2.5 hover:text-foreground",
+                    pathName == "/app/tasks"
+                      ? "font-semibold"
+                      : "text-muted-foreground",
+                  ])}
                 >
                   <ListTodo className="h-5 w-5"></ListTodo>
                   Acciones
                 </Link>
                 <Link
                   href="/app/users"
-                  className="flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground"
+                  className={cn([
+                    "flex items-center gap-4 pr-2.5 hover:text-foreground",
+                    pathName == "/app/users"
+                      ? "font-semibold"
+                      : "text-muted-foreground",
+                  ])}
                 >
                   <Users className="h-5 w-5"></Users>
                   Usuarios
                 </Link>
                 <Link
                   href="/app/kpis"
-                  className=" flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground" //When is selected, text-muted-foreground is deleted
+                  className={cn([
+                    "flex items-center gap-4 pr-2.5 hover:text-foreground",
+                    pathName == "/app/kpis"
+                      ? "font-semibold"
+                      : "text-muted-foreground",
+                  ])}
                 >
                   <Gauge className="h-5 w-5"></Gauge>
                   KPI{"'"}s
