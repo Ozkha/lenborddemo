@@ -1,12 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import createCompanyUser from "@/actions/createCompanyUser";
-import { Button } from "@/components/ui/button";
+export default async function Home() {
+  redirect("/login");
 
-export default function Home() {
   return (
     <div>
-      <p>Hombe page pro</p>
+      <p>Home page - Ignorar esta pagina</p>
     </div>
   );
 }
