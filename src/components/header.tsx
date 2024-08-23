@@ -72,7 +72,7 @@ export default function Header({
                 </Link>
                 <Link
                   href="/app/kpis"
-                  className=" flex items-center gap-4 pr-2.5 hover:text-foreground"
+                  className=" flex items-center gap-4 pr-2.5 text-muted-foreground hover:text-foreground" //When is selected, text-muted-foreground is deleted
                 >
                   <Gauge className="h-5 w-5"></Gauge>
                   KPI{"'"}s
