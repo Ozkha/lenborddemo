@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { signOutServer } from "@/lib/signout";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 type HeaderProps = {
   user: any;
@@ -36,6 +38,10 @@ export default function Header({
   children,
   hideSheet,
 }: HeaderProps) {
+  const searchParams = useSearchParams();
+
+  const boardId = searchParams.get("board");
+
   return (
     <>
       <header className="sticky z-40 top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -84,7 +90,11 @@ export default function Header({
                   <Link
                     key={"board-" + boardDetails.id}
                     href={"/app/board?board=" + boardDetails.id}
-                    className="text-muted-foreground"
+                    className={
+                      boardId == String(boardDetails.id)
+                        ? "font-semibold"
+                        : "text-muted-foreground"
+                    }
                   >
                     {boardDetails.name}
                   </Link>
