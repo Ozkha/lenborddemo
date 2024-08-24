@@ -74,9 +74,11 @@ export async function addUser({
       return { userId: newUserInsertId, boardId: boardId };
     });
 
-  const newUserBoardsItParticipate = await db
-    .insert(userBoardResponsabiliy)
-    .values(valuesUserBaordResponsability);
+  if (valuesUserBaordResponsability.length > 0) {
+    const newUserBoardsItParticipate = await db
+      .insert(userBoardResponsabiliy)
+      .values(valuesUserBaordResponsability);
+  }
 
   revalidatePath("/app/users");
 }
