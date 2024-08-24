@@ -458,6 +458,7 @@ export default function UsersPage({
 
                   <TableCell>
                     <Select
+                      disabled={userRole == "admin" ? false : true}
                       onValueChange={(val) => {
                         try {
                           changeUserRole({
