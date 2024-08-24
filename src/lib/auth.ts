@@ -83,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           // FIXME: Ojo con esto, aqui tendria que estar el domain
           const userFetched = await fetch(
-            "http:localhost:3000/api/getuser?username=" + username
+            process.env.FETCH_PATH_URL! + "/api/getuser?username=" + username
           );
 
           if (!userFetched.json) {
