@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "npx drizzle-kit generate:mysql --schema ./src/db/schema.ts --out=./src/db/migrations",
-    "db:migrate": "node -r esbuild-register ./src/db/migrate.ts",
+    "db:migrate": "npx drizzle-kit migrate --config=drizzle.config.ts",
     "db:drop": "npx drizzle-kit drop --config=drizzle.config.ts"
   },
   "dependencies": {
@@ -51,7 +51,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
-    "drizzle-kit": "^0.20.18",
+    "drizzle-kit": "^0.24.1",
     "esbuild": "^0.21.1",
     "esbuild-register": "^3.5.0",
     "eslint": "^8",
