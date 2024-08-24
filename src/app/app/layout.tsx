@@ -55,7 +55,11 @@ export default async function AppLayout({
     .where(sql`${users.id}=${user.id}`);
 
   if (userInfo.role == "worker") {
-    return <>{children}</>;
+    return (
+      <Header hideSheet={true} user={user}>
+        {children}
+      </Header>
+    );
   }
 
   const sqlWhereQuery = sql`${boards.companyId}=${user.companyId}`;
@@ -76,7 +80,15 @@ export default async function AppLayout({
   const boardList = await db.select().from(boards).where(sqlWhereQuery);
 
   return (
-    <Header user={user} boardList={boardList}>
+    <Header
+      hideSheet={
+        userInfo.role !== "board_moderator" && userInfo.role !== "admin"
+          ? true
+          : false
+      }
+      user={user}
+      boardList={boardList}
+    >
       {children}
     </Header>
   );

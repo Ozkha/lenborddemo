@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   user: any;
-  boardList: { id: number; name: string; companyId: number }[];
+  boardList?: { id: number; name: string; companyId: number }[];
   children: React.ReactNode;
   hideSheet?: boolean;
 };
@@ -103,19 +103,23 @@ export default function Header({
                 <p className="scroll-m-20 border-b pb-2 tex-sm text-muted-foreground first:mt-0 mt-4">
                   Tableros
                 </p>
-                {boardList.map((boardDetails) => (
-                  <Link
-                    key={"board-" + boardDetails.id}
-                    href={"/app/board?board=" + boardDetails.id}
-                    className={
-                      boardId == String(boardDetails.id)
-                        ? "font-semibold"
-                        : "text-muted-foreground"
-                    }
-                  >
-                    {boardDetails.name}
-                  </Link>
-                ))}
+                {boardList ? (
+                  boardList.map((boardDetails) => (
+                    <Link
+                      key={"board-" + boardDetails.id}
+                      href={"/app/board?board=" + boardDetails.id}
+                      className={
+                        boardId == String(boardDetails.id)
+                          ? "font-semibold"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {boardDetails.name}
+                    </Link>
+                  ))
+                ) : (
+                  <></>
+                )}
                 <Button
                   onClick={() => {
                     addBoard({
