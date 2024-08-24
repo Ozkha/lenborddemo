@@ -67,9 +67,9 @@ export default async function AppLayout({
 
   userModeratorBoardResps.map(({ boardId }, index) => {
     if (index == 0) {
-      sqlWhereQuery.append(sql`and ${boards.id}=${boardId}`);
+      sqlWhereQuery.append(sql` and ${boards.id}=${boardId}`);
     } else {
-      sqlWhereQuery.append(sql`or ${boards.id}=${boardId}`);
+      sqlWhereQuery.append(sql` or ${boards.id}=${boardId}`);
     }
   });
 
