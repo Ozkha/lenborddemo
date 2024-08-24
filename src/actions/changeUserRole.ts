@@ -3,6 +3,7 @@
 import { db as database } from "@/db";
 import { users } from "@/db/schema";
 import { sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 type changeUserRoleProps = {
   userId: number;
@@ -19,4 +20,6 @@ export async function changeUserRole({ userId, newRole }: changeUserRoleProps) {
     .update(users)
     .set({ role: newRole })
     .where(sql`${users.id}=${userId}`);
+
+  revalidatePath("/app/users");
 }
