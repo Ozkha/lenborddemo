@@ -2,7 +2,14 @@ import { auth } from "@/lib/auth";
 import TasksPage from "./clientpage";
 import { redirect } from "next/navigation";
 import { db as database } from "@/db";
-import { areas, boards, tasks, users, whys } from "@/db/schema";
+import {
+  areas,
+  boards,
+  tasks,
+  userBoardResponsabiliy,
+  users,
+  whys,
+} from "@/db/schema";
 import { SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 
@@ -255,13 +262,25 @@ export default async function BooardPageSuspensed({
     )
     .innerJoin(whys, sql`${tasks.causeId}=${whys.id}`);
 
+  const thisUserBoardResps = await db
+    .select({ id: userBoardResponsabiliy.boardId, name: boards.name })
+    .from(userBoardResponsabiliy)
+    .where(sql`${userBoardResponsabiliy.userId}=${userInfo.id}`)
+    .innerJoin(boards, sql`${boards.id}=${userBoardResponsabiliy.boardId}`);
+
+  let respsItHas: { id: number; name: string }[] = [];
+
+  if (userInfo.role !== "admin") {
+    respsItHas = thisUserBoardResps;
+  }
+
   return (
     <>
       <TasksPage
         user={user}
         isWorker={userInfo.role == "worker" ? true : false}
         userList={userList}
-        boardList={boardList}
+        boardList={respsItHas.length > 0 ? respsItHas : boardList}
         todoTasks={todoTasks}
         inProgressTasks={inProgressTasks}
         doneTasks={doneTasks}
