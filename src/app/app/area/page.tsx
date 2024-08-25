@@ -275,8 +275,6 @@ export default async function AreaPageSuspended({ searchParams }: any) {
       sql`${users.role}<>'admin' and ${users.companyId}=${user.companyId}`
     );
 
-  console.log("🧨 Date selected: ", dateSelected);
-
   return (
     <>
       <AreaPage

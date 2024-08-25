@@ -299,7 +299,6 @@ export default function AreaPage({
                         // TODO:
                         // 2. Al darle click se haran query de los datos especificos de esos dias
                         // 3. Se haran lo mismo que el 5w card que esta en el normal.
-                        console.log("Click - ", day);
                         const newDate = new Date(
                           areaSelectedDateData.date.getFullYear(),
                           areaCurrentDateData.date.getMonth(),
@@ -310,7 +309,6 @@ export default function AreaPage({
                           await get5wDateTotalEntries(areaInfo.id, newDate)
                         );
                         const dumps = await get5wdump(0, areaInfo.id, newDate);
-                        console.log(dumps);
 
                         if (dumps) {
                           setCurrentSpecific5W(dumps[0]);
