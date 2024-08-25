@@ -634,6 +634,12 @@ export default function AreaPage({
                             tiempo
                           </DialogDescription>
                         </DialogHeader>
+                        <div className="flex justify-between mb-2">
+                          <p className="text-muted-foreground text-sm">Causa</p>
+                          <p className="text-muted-foreground text-sm">
+                            Frecuencia
+                          </p>
+                        </div>
                         <ul className="md:min-w-48 lg:min-w-60 gap-3">
                           {causes.map((cause, indx) => (
                             <li
