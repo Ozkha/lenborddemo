@@ -268,7 +268,21 @@ export default function UsersPage({
         boardsIDsThatParticipate: values.boardsIDsThatParticipate,
         companyId: user.companyId as number,
       });
-      addUserForm.reset();
+      addUserForm.resetField("boardsIDsThatParticipate");
+
+      addUserForm.resetField("name");
+      addUserForm.setValue("name", "");
+
+      addUserForm.resetField("password");
+      addUserForm.setValue("password", "");
+
+      addUserForm.resetField("role");
+
+      addUserForm.resetField("username");
+      addUserForm.setValue("username", "");
+
+      // TODO: Agregar aqui el reset para que se borran los datos de la UI y aparte que no esten
+      // en el estado del form.
 
       toast({
         title: "Okay!",
