@@ -610,6 +610,8 @@ export default function BoardPage({
                       )}
                     />
 
+                    {/* TODO: Hacer con estos selects, que cuando se de click en "agregar como opcion" se vacie el search. Y que escoje
+ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borrar lo que escribo para poder elegir */}
                     <FormField
                       control={addNew5WhysEntryForm.control}
                       name="whereId"
@@ -630,7 +632,7 @@ export default function BoardPage({
                               }}
                               placeholder="Selecciona lugar..."
                               placeholderOnSearch="Agregar lugar..."
-                              emptyNode={(val) => (
+                              emptyNode={(val, setVal) => (
                                 <Button
                                   onClick={async (e) => {
                                     e.preventDefault();
@@ -643,6 +645,7 @@ export default function BoardPage({
                                         ...wheresList,
                                         { value: newWhereId, label: val },
                                       ]);
+                                      setVal("");
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}
@@ -676,7 +679,7 @@ export default function BoardPage({
                               }}
                               placeholder="Selecciona persona..."
                               placeholderOnSearch="Agregar persona..."
-                              emptyNode={(val) => (
+                              emptyNode={(val, setVal) => (
                                 <Button
                                   onClick={async (e) => {
                                     e.preventDefault();
@@ -689,6 +692,7 @@ export default function BoardPage({
                                         ...whosList,
                                         { value: newWhoId, label: val },
                                       ]);
+                                      setVal("");
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}
@@ -722,7 +726,7 @@ export default function BoardPage({
                               }}
                               placeholder="Selecciona lugar..."
                               placeholderOnSearch="Agregar porque..."
-                              emptyNode={(val) => (
+                              emptyNode={(val, setVal) => (
                                 <Button
                                   onClick={async (e) => {
                                     e.preventDefault();
@@ -735,6 +739,7 @@ export default function BoardPage({
                                         ...whysList,
                                         { value: newWhyId, label: val },
                                       ]);
+                                      setVal("");
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}

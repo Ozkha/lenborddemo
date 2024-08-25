@@ -30,7 +30,10 @@ type ComboboxProps = {
   placeholder?: string;
   placeholderOnSearch?: string;
   emptyLabel?: string;
-  emptyNode?: (val: string) => React.ReactNode;
+  emptyNode?: (
+    val: string,
+    setVal: Dispatch<SetStateAction<string>>
+  ) => React.ReactNode;
   data: { value: string | number; label: string }[];
   value?: string;
   onSelect: (value: string) => void;
@@ -74,7 +77,7 @@ export function Combobox({
           />
           <CommandList>
             <CommandEmpty>
-              {emptyNode ? emptyNode(searchVal) : emptyLabel}
+              {emptyNode ? emptyNode(searchVal, setSearchVal) : emptyLabel}
             </CommandEmpty>
             <CommandGroup>
               {data && data.length > 0 ? (
