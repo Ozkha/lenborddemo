@@ -162,11 +162,9 @@ type TaskCardProps = {
   problem: string;
   cause: string;
   state: "todo" | "inprogress" | "done";
+  showDeleteOption: boolean;
 };
 
-// TODO: Aqui ando, corregir errores, modificar segun los nuevos datos
-// Agregar los comportamiento o funciones de backend (los botones de por hacer, copmpletado, eliminar, etc.)
-// Comportamiento de los filtros y su estado en los searchParams.
 function TaskCard({
   id,
   title,
@@ -178,6 +176,7 @@ function TaskCard({
   problem,
   cause,
   state,
+  showDeleteOption = false,
 }: TaskCardProps) {
   const [willDelete, setWillDelete] = useState(false);
   return (
@@ -341,36 +340,37 @@ function TaskCard({
         </div>
 
         <div className="flex items-center justify-between">
-          {/* TODO: Creo que el usuario normal nodeberia ser capaz de elimnar la tarea, a menos que sea el board_manager o el admin */}
-          <div className="flex">
-            <Button
-              onClick={() => {
-                setWillDelete(true);
-              }}
-              variant={"ghost"}
-              size={"icon"}
-            >
-              <Trash className="w-4 h-4" />
-            </Button>
-            <div className={cn(["flex gap-2", willDelete ? "" : "hidden"])}>
+          {showDeleteOption && (
+            <div className="flex">
               <Button
                 onClick={() => {
-                  setWillDelete(false);
+                  setWillDelete(true);
                 }}
-                variant={"secondary"}
+                variant={"ghost"}
+                size={"icon"}
               >
-                Cancelar
+                <Trash className="w-4 h-4" />
               </Button>
-              <Button
-                onClick={() => {
-                  deleteTask(id);
-                }}
-                variant={"destructive"}
-              >
-                Eliminar
-              </Button>
+              <div className={cn(["flex gap-2", willDelete ? "" : "hidden"])}>
+                <Button
+                  onClick={() => {
+                    setWillDelete(false);
+                  }}
+                  variant={"secondary"}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    deleteTask(id);
+                  }}
+                  variant={"destructive"}
+                >
+                  Eliminar
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
           <p className="text-xs text-gray-500">Asignada por: {assignedBy}</p>
         </div>
       </DialogContent>
@@ -530,6 +530,7 @@ export default function TasksPage({
                       problem={task.problem}
                       cause={task.cause.name}
                       state="todo"
+                      showDeleteOption={!isWorker}
                     />
                   ))}
                   {/* <Button variant={"ghost"}>Mostrar mas</Button> */}
@@ -560,6 +561,7 @@ export default function TasksPage({
                     problem={task.problem}
                     cause={task.cause.name}
                     state="inprogress"
+                    showDeleteOption={!isWorker}
                   />
                 ))
               ) : (
@@ -588,6 +590,7 @@ export default function TasksPage({
                     problem={task.problem}
                     cause={task.cause.name}
                     state="done"
+                    showDeleteOption={!isWorker}
                   />
                 ))
               ) : (
