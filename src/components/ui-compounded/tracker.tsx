@@ -1,4 +1,6 @@
 "use client";
+
+import React from "react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -25,7 +27,9 @@ export function Tracker({ data, className, onClick }: TrackerProps) {
           <Tooltip key={"tracker-" + index}>
             <TooltipTrigger
               onClick={() => {
-                onClick ? onClick(index) : undefined;
+                if (onClick) {
+                  onClick(index);
+                }
               }}
               asChild
             >
