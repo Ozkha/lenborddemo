@@ -1,12 +1,9 @@
 import {
-  MySqlTable,
   bigint,
-  datetime,
   json,
   mysqlEnum,
   mysqlTable,
   serial,
-  text,
   timestamp,
   unique,
   varchar,
