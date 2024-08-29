@@ -1,13 +1,7 @@
 "use client";
 
-// import * as React from "react";
-import {
-  Calculator,
-  Calendar,
-  Check,
-  ChevronsUpDown,
-  Smile,
-} from "lucide-react";
+import React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
