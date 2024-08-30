@@ -13,10 +13,10 @@ import {
 import { SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 
-export default async function BooardPageSuspensed({
+export default async function TaksPage({
   searchParams,
 }: {
-  searchParams: any;
+  searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const session = await auth();
 
@@ -33,10 +33,7 @@ export default async function BooardPageSuspensed({
 
   if (searchParams) {
     userIds = (() => {
-      const userIdOrIdsTemp = searchParams.user as
-        | string
-        | string[]
-        | undefined;
+      const userIdOrIdsTemp = searchParams.user;
       if (userIdOrIdsTemp) {
         if (typeof userIdOrIdsTemp == "string") {
           return [userIdOrIdsTemp];
@@ -48,10 +45,7 @@ export default async function BooardPageSuspensed({
       }
     })();
     boardIds = (() => {
-      const boardIdOrIdsTemp = searchParams.board as
-        | string
-        | string[]
-        | undefined;
+      const boardIdOrIdsTemp = searchParams.board;
       if (boardIdOrIdsTemp) {
         if (typeof boardIdOrIdsTemp == "string") {
           return [boardIdOrIdsTemp];
@@ -102,7 +96,7 @@ export default async function BooardPageSuspensed({
 
   const allocatorUsers = alias(users, "allocatorusers");
 
-  let todoWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='todo'`;
+  const todoWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='todo'`;
 
   userIds.map((usrId, index) => {
     if (index == 0) {
@@ -154,7 +148,7 @@ export default async function BooardPageSuspensed({
     )
     .innerJoin(whys, sql`${tasks.causeId}=${whys.id}`);
 
-  let inProgressWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='inprogress'`;
+  const inProgressWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='inprogress'`;
 
   userIds.map((usrId, index) => {
     if (index == 0) {
@@ -210,7 +204,7 @@ export default async function BooardPageSuspensed({
     )
     .innerJoin(whys, sql`${tasks.causeId}=${whys.id}`);
 
-  let doneWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='completed'`;
+  const doneWhereSelectQuery: SQL<unknown> = sql`${tasks.companyId}=${user.companyId} and ${tasks.status}='completed'`;
 
   userIds.map((usrId, index) => {
     if (index == 0) {

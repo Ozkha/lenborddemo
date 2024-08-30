@@ -23,13 +23,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
@@ -40,6 +33,7 @@ import {
   PlusCircleIcon,
   Trash,
 } from "lucide-react";
+import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -48,7 +42,7 @@ type FacetedFilterProps = {
   options: { value: number; label: string }[];
   defaultValues?: number[];
   values?: number[];
-  onChangeValues: (...event: any) => void;
+  onChangeValues: (val: number[]) => void;
 };
 function FacetedFilter({
   title,
@@ -402,7 +396,7 @@ type Tasks = {
 }[];
 
 type TasksPageProps = {
-  user: any;
+  user: Session["user"];
   isWorker: boolean;
   userList: {
     id: number;
@@ -422,7 +416,6 @@ type TasksPageProps = {
   };
 };
 export default function TasksPage({
-  user,
   isWorker,
   userList,
   boardList,
@@ -453,7 +446,7 @@ export default function TasksPage({
                 Number(usrId)
               )}
               onChangeValues={(val) => {
-                const usersSelected = val as number[];
+                const usersSelected = val;
                 const newSrchParams = new URLSearchParams(
                   "?" + queryRoute.toString()
                 );
@@ -480,7 +473,7 @@ export default function TasksPage({
               Number(brdId)
             )}
             onChangeValues={(val) => {
-              const boardsSelected = val as number[];
+              const boardsSelected = val;
               const newSrchParams = new URLSearchParams(
                 "?" + queryRoute.toString()
               );
