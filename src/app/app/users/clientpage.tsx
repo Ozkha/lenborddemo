@@ -11,7 +11,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -26,7 +25,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -41,16 +39,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import {
   Popover,
   PopoverContent,
@@ -83,6 +71,7 @@ import {
   PlusCircleIcon,
   X,
 } from "lucide-react";
+import { Session } from "next-auth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -93,7 +82,7 @@ type FacetedFilterProps = {
   optionsEnabled?: number[];
   defaultValues?: number[];
   values?: number[];
-  onChangeValues: (...event: any) => void;
+  onChangeValues: (val: number[]) => void;
 };
 function FacetedFilter({
   title,
@@ -220,7 +209,7 @@ const changePasswordFormSchema = z.object({
 });
 
 type UsersPageProps = {
-  user: any;
+  user: Session["user"];
   userRole: "worker" | "board_moderator" | "admin";
   boardList: {
     value: number;
@@ -266,7 +255,7 @@ export default function UsersPage({
         password: values.password,
         role: values.role,
         boardsIDsThatParticipate: values.boardsIDsThatParticipate,
-        companyId: user.companyId as number,
+        companyId: Number(user.companyId),
       });
       addUserForm.resetField("boardsIDsThatParticipate");
 
@@ -288,6 +277,7 @@ export default function UsersPage({
         title: "Okay!",
         description: "Nuevo Usuario creado con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -313,6 +303,7 @@ export default function UsersPage({
         title: "Okay!",
         description: "Contraseña cambiada con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -479,6 +470,7 @@ export default function UsersPage({
                             userId: LUser.id,
                             newRole: val as "worker" | "board_moderator",
                           });
+                          //eslint-disable-next-line @typescript-eslint/no-unused-vars
                         } catch (e) {
                           toast({
                             variant: "destructive",
@@ -559,6 +551,7 @@ export default function UsersPage({
                                 userId: LUser.id,
                                 newRole: val as "worker" | "board_moderator",
                               });
+                              //eslint-disable-next-line @typescript-eslint/no-unused-vars
                             } catch (e) {
                               toast({
                                 variant: "destructive",

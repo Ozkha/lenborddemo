@@ -76,10 +76,10 @@ export default async function BooardPageSuspensed() {
       name: string;
     }[];
   }[] = Object.values(
-    userListRaw.reduce((acc: any, user) => {
-      // @ts-ignore
+    userListRaw.reduce((acc, user) => {
+      // @ts-expect-error user.id or number can be used to acces to a key of an object in this case.
       if (!acc[user.id]) {
-        // @ts-ignore
+        // @ts-expect-error user.id or number can be used to acces to a key of an object in this case.
         acc[user.id] = {
           id: user.id,
           username: user.username,
@@ -91,7 +91,7 @@ export default async function BooardPageSuspensed() {
       }
 
       if (user.userBoardResponsability.id !== null) {
-        // @ts-ignore
+        // @ts-expect-error user.id or number can be used to acces to a key of an object in this case.
         acc[user.id].userBoardResponsability.push(user.userBoardResponsability);
       }
 
