@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 export async function deleteTask(id: number) {
   const db = await database;
 
-  const deleteTaskResp = await db.delete(tasks).where(sql`${tasks.id}=${id}`);
+  await db.delete(tasks).where(sql`${tasks.id}=${id}`);
 
   revalidatePath("/app/tasks");
 }
