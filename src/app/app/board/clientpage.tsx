@@ -7,13 +7,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -32,7 +30,6 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -41,18 +38,17 @@ import {
 import { z } from "zod";
 import { changeBoardName } from "@/actions/changeBoardName";
 import { toast } from "@/components/ui/use-toast";
-import { min } from "drizzle-orm";
 import { addAreaInBoard } from "@/actions/addArea";
-import { date, year } from "drizzle-orm/mysql-core";
 import { setKpiTrackingDayValue } from "@/actions/setKpiTackingDayValue";
 import { useRouter } from "next/navigation";
 import { addWhere } from "@/actions/addWhere";
 import { addWho } from "@/actions/addWho";
 import { addWhy } from "@/actions/addWhy";
 import { create5wDump } from "@/actions/create5wDump";
+import { Session } from "next-auth";
 
 type ClientBoardPageProps = {
-  user: any;
+  user: Session["user"];
   boardInfo: { id: number; name: string };
   kpiList: { id: number; name: string; fields: string[] }[];
   dateInfo: {
@@ -137,6 +133,7 @@ export default function BoardPage({
         title: "Okay!",
         description: "Nombre del tablero cambiado con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -159,7 +156,7 @@ export default function BoardPage({
       addAreaInBoard({
         name: values.name,
         boardId: boardInfo.id,
-        companyId: user.companyId,
+        companyId: Number(user.companyId),
         kpiId: values.kpiId,
       });
       newAreaForm.reset();
@@ -168,6 +165,7 @@ export default function BoardPage({
         title: "Okay!",
         description: "Area del tablero creado con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -206,8 +204,9 @@ export default function BoardPage({
         kpiId: values.kpiId,
         diaInhabil: values.diaInhabil,
         values: values.values,
-        companyId: user.companyId,
+        companyId: Number(user.companyId),
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -233,7 +232,7 @@ export default function BoardPage({
         whyId: values.whyId,
         whyDetails: values.whyDetails,
         areaId: values.areaId,
-        companyId: user.companyId,
+        companyId: Number(user.companyId),
       });
       addNew5WhysEntryForm.resetField("what");
       addNew5WhysEntryForm.setValue("what", "");
@@ -243,6 +242,7 @@ export default function BoardPage({
       addNew5WhysEntryForm.resetField("whyId");
       addNew5WhysEntryForm.resetField("whyDetails");
       addNew5WhysEntryForm.setValue("whyDetails", "");
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -639,13 +639,14 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                     try {
                                       const newWhereId = await addWhere({
                                         label: val,
-                                        companyId: user.companyId,
+                                        companyId: Number(user.companyId),
                                       });
                                       setWheresList([
                                         ...wheresList,
                                         { value: newWhereId, label: val },
                                       ]);
                                       setVal("");
+                                      //eslint-disable-next-line @typescript-eslint/no-unused-vars
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}
@@ -686,13 +687,14 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                     try {
                                       const newWhoId = await addWho({
                                         label: val,
-                                        companyId: user.companyId,
+                                        companyId: Number(user.companyId),
                                       });
                                       setWhosList([
                                         ...whosList,
                                         { value: newWhoId, label: val },
                                       ]);
                                       setVal("");
+                                      //eslint-disable-next-line @typescript-eslint/no-unused-vars
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}
@@ -733,13 +735,14 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                     try {
                                       const newWhyId = await addWhy({
                                         label: val,
-                                        companyId: user.companyId,
+                                        companyId: Number(user.companyId),
                                       });
                                       setWhysList([
                                         ...whysList,
                                         { value: newWhyId, label: val },
                                       ]);
                                       setVal("");
+                                      //eslint-disable-next-line @typescript-eslint/no-unused-vars
                                     } catch (e) {}
                                   }}
                                   variant={"ghost"}

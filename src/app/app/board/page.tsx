@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import BoardPage from "./clientpage";
-import { redirect, useSearchParams } from "next/navigation";
+import { redirect } from "next/navigation";
 import { db as database } from "@/db";
 import {
   areas,
@@ -13,9 +13,13 @@ import {
   whos,
   whys,
 } from "@/db/schema";
-import { asc, desc, sql } from "drizzle-orm";
+import { asc, sql } from "drizzle-orm";
 
-export default async function BooardPageSuspensed({ searchParams }: any) {
+export default async function BooardPageSuspensed({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const session = await auth();
 
   if (session) {
@@ -79,8 +83,8 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     .from(kpis)
     .where(sql`${kpis.companyId}=${user.companyId}`);
 
-  let year = searchParams.year;
-  let month = searchParams.month;
+  let year = Number(searchParams.year);
+  let month = Number(searchParams.month);
 
   if (!year) {
     year = new Date().getFullYear();
@@ -134,16 +138,16 @@ export default async function BooardPageSuspensed({ searchParams }: any) {
     }[];
   }[] = Object.values(
     areasPerBoardListLABUENA.reduce((acc, current) => {
-      // @ts-ignore
+      // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
       if (!acc[current.id]) {
-        // @ts-ignore
+        // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
         acc[current.id] = {
           ...current,
           data: current.data ? [current.data] : [],
         };
       } else {
         if (current.data) {
-          //@ts-ignore
+          // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
           acc[current.id].data.push(current.data);
         }
       }
