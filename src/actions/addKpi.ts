@@ -41,7 +41,7 @@ export default async function addKpi({
     goal: goal,
   };
 
-  const kpiGoalAdded = await db.insert(kpiGoals).values(newKpiGoa);
+  await db.insert(kpiGoals).values(newKpiGoa);
   revalidatePath("/app/kpis");
 }
 

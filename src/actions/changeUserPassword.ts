@@ -10,7 +10,7 @@ export async function changeUserPassword(userId: number, newPassword: string) {
 
   const salt = bcrypt.genSaltSync(10);
   const hashedPass = bcrypt.hashSync(newPassword, salt);
-  const changePassResp = await db
+  await db
     .update(users)
     .set({ password: hashedPass })
     .where(sql`${users.id}=${userId}`);

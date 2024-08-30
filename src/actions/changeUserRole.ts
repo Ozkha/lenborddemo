@@ -15,8 +15,7 @@ export async function changeUserRole({ userId, newRole }: changeUserRoleProps) {
   if (newRole !== "board_moderator" || newRole !== "board_moderator") {
     throw new Error("The role does not exist.");
   }
-
-  const updatedUserRole = await db
+  await db
     .update(users)
     .set({ role: newRole })
     .where(sql`${users.id}=${userId}`);

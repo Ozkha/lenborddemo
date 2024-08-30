@@ -10,8 +10,7 @@ export async function changeTaskState(
   state: "todo" | "inprogress" | "completed"
 ) {
   const db = await database;
-
-  const changeStateResp = await db
+  await db
     .update(tasks)
     .set({
       status: state,

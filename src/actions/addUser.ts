@@ -75,7 +75,7 @@ export async function addUser({
     });
 
   if (valuesUserBaordResponsability.length > 0) {
-    const newUserBoardsItParticipate = await db
+    await db
       .insert(userBoardResponsabiliy)
       .values(valuesUserBaordResponsability);
   }

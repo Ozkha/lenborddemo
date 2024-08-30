@@ -6,9 +6,7 @@ import { revalidatePath } from "next/cache";
 export async function addBoard(newBoard: { name: string; companyId: number }) {
   const db = await database;
 
-  try {
-    await db.insert(boards).values(newBoard);
-  } catch (e) {}
+  await db.insert(boards).values(newBoard);
 
   revalidatePath("/app/boards");
 }

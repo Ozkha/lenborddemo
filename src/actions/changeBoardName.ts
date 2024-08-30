@@ -11,7 +11,7 @@ type changeBoardNameProps = {
 };
 export async function changeBoardName({ name, boardId }: changeBoardNameProps) {
   const db = await database;
-  const updatedNameResponse = await db
+  await db
     .update(boards)
     .set({
       name: name,

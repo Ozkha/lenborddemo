@@ -19,5 +19,5 @@ export async function addTask(task: addTaskProps) {
   const db = await database;
   const newTask: newTask = task;
 
-  const newTaskAddedResp = await db.insert(tasks).values(newTask);
+  await db.insert(tasks).values(newTask);
 }

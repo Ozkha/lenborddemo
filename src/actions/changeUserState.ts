@@ -11,7 +11,7 @@ export async function changeUserState(
 ) {
   const db = await database;
 
-  const userStateUpdatedResp = await db
+  await db
     .update(users)
     .set({ status: newState })
     .where(sql`${users.id}=${userId}`);

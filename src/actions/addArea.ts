@@ -18,7 +18,7 @@ export async function addAreaInBoard({
 }: addAreaInBoardProps) {
   const db = await database;
 
-  const addedAreaInBoardResp = await db.insert(areas).values({
+  await db.insert(areas).values({
     name: name,
     boardId: boardId,
     companyId: companyId,
