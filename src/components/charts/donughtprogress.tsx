@@ -1,13 +1,6 @@
 "use client";
-import React, { PureComponent } from "react";
-import {
-  PieChart,
-  Pie,
-  Sector,
-  Cell,
-  ResponsiveContainer,
-  Label,
-} from "recharts";
+import React from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Label } from "recharts";
 
 enum COLORS {
   "fail" = "#fe0000",
@@ -34,7 +27,6 @@ const renderCustomizedLabel = ({
   midAngle,
   innerRadius,
   outerRadius,
-  percent,
   index,
 }: renderCustomizedLabelProps) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.8;
@@ -71,6 +63,7 @@ export default function DonughtProgress({
   maxLength,
   onClickCell,
 }: DonughtProgressProps) {
+  // eslint-disable-next-line prefer-const
   let finalData: {
     label: string;
     state: "success" | "fail" | "mid" | "disabled" | "empty";
