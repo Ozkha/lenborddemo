@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
   const dbb = await database;
 
-  let [userFetched] = await dbb
+  const [userFetched] = await dbb
     .select()
     .from(users)
     .where(sql`${users.username}=${username}`);
