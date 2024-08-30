@@ -76,6 +76,7 @@ export default function SignInClientPage() {
                       try {
                         await signInServer(formData);
                         router.push("/app/boards");
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                       } catch (e) {
                         setErrorAtSignIn(true);
                       }
