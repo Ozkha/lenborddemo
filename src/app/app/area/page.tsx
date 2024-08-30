@@ -15,8 +15,12 @@ import {
   whys,
 } from "@/db/schema";
 import { asc, count, desc, sql } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-export default async function AreaPageSuspended({ searchParams }: any) {
+
+export default async function AreaPageSuspended({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const session = await auth();
 
   if (session) {
@@ -149,16 +153,19 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     }[];
   }[] = Object.values(
     areaDateSelectedResp.reduce((acc, current) => {
-      // @ts-ignore
+      // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
+
       if (!acc[current.id]) {
-        // @ts-ignore
+        // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
+
         acc[current.id] = {
           ...current,
           data: current.data ? [current.data] : [],
         };
       } else {
         if (current.data) {
-          //@ts-ignore
+          // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
+
           acc[current.id].data.push(current.data);
         }
       }
@@ -198,16 +205,16 @@ export default async function AreaPageSuspended({ searchParams }: any) {
     }[];
   }[] = Object.values(
     areasDataThisMonthYear.reduce((acc, current) => {
-      // @ts-ignore
+      // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
       if (!acc[current.id]) {
-        // @ts-ignore
+        // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
         acc[current.id] = {
           ...current,
           data: current.data ? [current.data] : [],
         };
       } else {
         if (current.data) {
-          //@ts-ignore
+          // @ts-expect-error current.id or number can be used to acces to a key of an object in this case.
           acc[current.id].data.push(current.data);
         }
       }

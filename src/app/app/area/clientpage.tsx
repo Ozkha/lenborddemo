@@ -52,36 +52,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import {
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  Copy,
   SquareCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
 import { addTask } from "@/actions/addTask";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+
 import { get5wDateTotalEntries } from "@/actions/get5wDateTotalEntries";
+import { Session } from "next-auth";
 
 // TODO:
 // Me falto que se hiciera funcional la pestania de ajustes en area page.
 
 type AreaPageProps = {
-  user: any;
+  user: Session["user"];
   maxfivedumps: number;
   areaInfo: {
     id: number;
@@ -194,6 +188,7 @@ export default function AreaPage({
       toast({
         title: "Okay!",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -202,8 +197,6 @@ export default function AreaPage({
       });
     }
   }
-
-  const [w5Page, setW5Page] = useState(0);
   // FIXME: Error en que cuando cambio de fecha en la page, no refresca. Yo creo que deberia
   // otra hipotesis: Arreglarlemas para no usar el react.state y mejor solamente
   // el revalidatePath.
@@ -317,7 +310,7 @@ export default function AreaPage({
                         setSpecificDay5WDialogOpen(true);
                       }}
                       data={(() => {
-                        let finalData: { color: string; tooltip: string }[] =
+                        const finalData: { color: string; tooltip: string }[] =
                           [];
 
                         for (
@@ -359,7 +352,7 @@ export default function AreaPage({
                   <CardContent>
                     <Tracker
                       data={(() => {
-                        let finalData: { color: string; tooltip: string }[] =
+                        const finalData: { color: string; tooltip: string }[] =
                           [];
 
                         for (let i = 1; i <= areaCurrentDateData.maxDays; i++) {
