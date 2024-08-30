@@ -26,7 +26,7 @@ export async function create5wDump({
 }: create5wDumpProps) {
   const db = await database;
 
-  const create5wDumpResp = await db.insert(fiveWhys).values({
+  await db.insert(fiveWhys).values({
     date: date,
     what: what,
     whereId: whereId,
