@@ -1,7 +1,7 @@
 "use server";
 
 import { db as database } from "@/db";
-import { kpiGoals, kpis, newKpi, newKpiGoal } from "@/db/schema";
+import { kpiGoals, newKpiGoal } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 
 type addKpiProps = {
@@ -23,6 +23,6 @@ export default async function updateKpi({ id, newGoal }: addKpiProps) {
     goal: newGoal,
   };
 
-  const kpiGoalAdded = await db.insert(kpiGoals).values(newKpiGoa);
+  await db.insert(kpiGoals).values(newKpiGoa);
   revalidatePath("/app/kpis");
 }
