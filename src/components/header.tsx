@@ -22,12 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { signOutServer } from "@/lib/signout";
-import { useEffect } from "react";
+import React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Session } from "next-auth";
 
 type HeaderProps = {
-  user: any;
+  user: Session["user"];
   boardList?: { id: number; name: string; companyId: number }[];
   children: React.ReactNode;
   hideSheet?: boolean;
