@@ -4,13 +4,14 @@ import { addBoard } from "@/actions/addboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowRight, Plus } from "lucide-react";
+import { Session } from "next-auth";
 import Link from "next/link";
 
 export default function BoardsPage({
   user,
   boardlist,
 }: {
-  user: any;
+  user: Session["user"];
   boardlist: { name: string; id: number; companyId: number }[];
 }) {
   return (
@@ -25,7 +26,10 @@ export default function BoardsPage({
           </p>
           <Button
             onClick={() => {
-              addBoard({ name: "sin nombre", companyId: user.companyId });
+              addBoard({
+                name: "sin nombre",
+                companyId: Number(user.companyId),
+              });
             }}
             variant={"ghost"}
           >

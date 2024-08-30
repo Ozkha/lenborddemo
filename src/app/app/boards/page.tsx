@@ -3,7 +3,7 @@ import BoardsPage from "./clientpage";
 import { auth } from "@/lib/auth";
 import { db as database } from "@/db";
 import { boards, userBoardResponsabiliy, users } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export default async function BoardsPageS() {
   const session = await auth();
