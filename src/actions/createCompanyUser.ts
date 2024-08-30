@@ -49,7 +49,7 @@ export default async function createCompanyUser(formData: FormData) {
     companyId: newCompanyResponseHeader[0].insertId,
   };
 
-  const newUserResponseHeader = await db.insert(users).values(newUser);
+  await db.insert(users).values(newUser);
   return {
     status: "OK",
   };
