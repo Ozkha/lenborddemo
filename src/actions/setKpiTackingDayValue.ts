@@ -2,7 +2,7 @@
 
 import { db as database } from "@/db";
 import { kpiGoals, kpiMetric_tracking, kpis } from "@/db/schema";
-import { desc, max, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 type setKpiTrackingDayValueProps = {
@@ -58,7 +58,7 @@ export async function setKpiTrackingDayValue({
 
   // TODO: HACER UNA LISTA DE LOS LIMITES DEL getMetricValue y de el obtener las variables funcion, que es cuand ose crean los KPI
 
-  let finalValue = getMetricValue(lastKpiGoal.metric, values) || 0;
+  const finalValue = getMetricValue(lastKpiGoal.metric, values) || 0;
 
   let status: "success" | "fail" | "mid" | "disabled" | "empty";
   if (diaInhabil) {
@@ -69,7 +69,7 @@ export async function setKpiTrackingDayValue({
 
   // FIXME: PARECE: CHECARLO DESPUES. Eta pasando que aparentemente en lugar de actualiza, crea uno nuevo.
   if (willInsert) {
-    const insertKpiTrackignResp = await db.insert(kpiMetric_tracking).values({
+    await db.insert(kpiMetric_tracking).values({
       date: date,
       areaId: areaId,
       kpiId: kpiId,
@@ -80,7 +80,7 @@ export async function setKpiTrackingDayValue({
       companyId: companyId,
     });
   } else {
-    const updateKpiTrackingResp = await db
+    await db
       .update(kpiMetric_tracking)
       .set({
         status: status,
@@ -94,7 +94,7 @@ export async function setKpiTrackingDayValue({
 }
 
 function getMetricValue(metrica: string, valores: number[]) {
-  //@ts-ignore
+  // @ts-expect-error metrica will never be null
   const variables = metrica.match(/\b\w+\b/g).filter((v) => isNaN(v));
 
   if (variables.length !== valores.length) {
@@ -105,7 +105,7 @@ function getMetricValue(metrica: string, valores: number[]) {
 
   const contexto = {};
   variables.forEach((variable, index) => {
-    //@ts-ignore
+    // @ts-expect-error varaible is used as key indeifier to acces in contexto object.
     contexto[variable] = valores[index];
   });
 
