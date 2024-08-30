@@ -1,28 +1,7 @@
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { auth } from "@/lib/auth";
-import {
-  CircleUser,
-  Gauge,
-  ListTodo,
-  Package2,
-  PanelLeftOpen,
-  Plus,
-  Users,
-} from "lucide-react";
-import Link from "next/link";
 import { db as database } from "@/db";
 import { boards, userBoardResponsabiliy, users } from "@/db/schema";
 import { sql } from "drizzle-orm";
-import { addBoard } from "@/actions/addboard";
 import Header from "@/components/header";
 import { redirect } from "next/navigation";
 
