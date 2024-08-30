@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -29,22 +28,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -58,6 +41,7 @@ import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MinusCircle, Pencil, RotateCcw } from "lucide-react";
+import { Session } from "next-auth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -74,7 +58,7 @@ function CategoryBar({ data, className }: CategoryBarProps) {
   return (
     <div className={cn(["w-full", className])}>
       <div className="w-full flex justify-around mb-1">
-        {data.map((val, i) => (
+        {data.map((val) => (
           <p key={"label-" + val.label} className="text-xs">
             {val.operator + "" + val.amount}
           </p>
@@ -215,7 +199,7 @@ const kpiUpdateFormSchema = z.object({
 });
 
 type KpisPageProps = {
-  user: any;
+  user: Session["user"];
   kpiList: {
     id: number;
     name: string;
@@ -271,7 +255,7 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
       addKpi({
         name: values.name,
         metric: values.metric,
-        companyId: user.companyId,
+        companyId: Number(user.companyId),
         goal: values.goal,
       });
       kpiForm.reset();
@@ -280,6 +264,7 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
         title: "Okay!",
         description: "KPI creado con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -300,6 +285,7 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
         title: "Okay!",
         description: "KPI actualizado con exito",
       });
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -308,9 +294,6 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
       });
     }
   }
-
-  const [currentGoal, setCurrentGoal] =
-    useState<{ label: string; color: string; mean: string | undefined }[]>();
 
   const [midValAux, setMidValAux] = useState<{
     label: "success" | "mid" | "fail";
@@ -396,7 +379,7 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
                       </p>
                       <ul className="my-2 ml-6 list-disc [&>li]:mt-2">
                         {getMetricFields(kpiForm.watch().metric).map(
-                          (field, i) => (
+                          (field) => (
                             <li key={"cmps-" + field}>{field}</li>
                           )
                         )}
