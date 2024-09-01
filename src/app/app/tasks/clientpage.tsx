@@ -1,6 +1,6 @@
 "use client";
-import { changeTaskState } from "@/actions/changeTaskState";
-import { deleteTask } from "@/actions/deleteTask";
+import { changeTaskState } from "@/actions/task/changeTaskState";
+import { deleteTask } from "@/actions/task/deleteTask";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

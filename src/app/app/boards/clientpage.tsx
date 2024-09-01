@@ -1,6 +1,6 @@
 "use client";
 
-import { addBoard } from "@/actions/addboard";
+import { addBoard } from "@/actions/board/addboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowRight, Plus } from "lucide-react";

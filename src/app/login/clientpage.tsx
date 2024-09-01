@@ -1,6 +1,6 @@
 "use client";
 
-import createCompanyUser from "@/actions/createCompanyUser";
+import { addAdmin } from "@/actions/user/addAdmin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,20 @@ import { useState } from "react";
 import { signInServer } from "@/lib/signin";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+
+const newCompanyAndUserSchema = z.object({
+  companyName: z
+    .string({ invalid_type_error: "Nombre de empresa invalido" })
+    .min(1),
+  username: z
+    .string({ invalid_type_error: "Nombre de Usuario invalido" })
+    .min(5),
+  password: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/[A-Z]/, "La contraseña debe tener al menos una letra mayúscula")
+    .regex(/[0-9]/, "La contraseña debe tener al menos un número"),
+});
 
 const signInSchema = z.object({
   username: z.string().min(1, { message: "Es necesario un nombre de usuario" }),
@@ -126,7 +140,21 @@ export default function SignInClientPage() {
               <form
                 className="space-y-2"
                 action={async (formData) => {
-                  await createCompanyUser(formData);
+                  const validatedFields = newCompanyAndUserSchema.safeParse({
+                    companyName: formData.get("companyname"),
+                    username: formData.get("username"),
+                    password: formData.get("password"),
+                  });
+
+                  if (!validatedFields.success) {
+                    return;
+                  }
+
+                  await addAdmin({
+                    username: validatedFields.data.username,
+                    password: validatedFields.data.password,
+                    companyName: validatedFields.data.companyName,
+                  });
                 }}
               >
                 <div className="grid gap-2 mb-8">

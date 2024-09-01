@@ -12,7 +12,7 @@ import {
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import Link from "next/link";
-import { addBoard } from "@/actions/addboard";
+import { addBoard } from "@/actions/board/addboard";
 import {
   DropdownMenu,
   DropdownMenuContent,

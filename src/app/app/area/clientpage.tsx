@@ -1,6 +1,6 @@
 "use client";
 
-import { get5wdump } from "@/actions/get5wdump";
+import { get5wdump } from "@/actions/fivewhy/get5wdump";
 import MonthPicker from "@/components/ui-compounded/monthpicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
 import { Badge } from "@/components/ui/badge";
@@ -66,9 +66,9 @@ import { useForm } from "react-hook-form";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { addTask } from "@/actions/addTask";
+import { addTask } from "@/actions/task/addTask";
 
-import { get5wDateTotalEntries } from "@/actions/get5wDateTotalEntries";
+import { get5wDateTotalEntries } from "@/actions/fivewhy/get5wDateTotalEntries";
 import { Session } from "next-auth";
 
 // TODO:

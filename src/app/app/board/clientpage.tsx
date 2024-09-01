@@ -36,15 +36,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { z } from "zod";
-import { changeBoardName } from "@/actions/changeBoardName";
+import { changeBoardName } from "@/actions/board/changeBoardName";
 import { toast } from "@/components/ui/use-toast";
-import { addAreaInBoard } from "@/actions/addArea";
-import { setKpiTrackingDayValue } from "@/actions/setKpiTackingDayValue";
+import { addAreaInBoard } from "@/actions/area/addArea";
+import { setKpiTrackingDayValue } from "@/actions/kpi/setKpiTackingDayValue";
 import { useRouter } from "next/navigation";
-import { addWhere } from "@/actions/addWhere";
-import { addWho } from "@/actions/addWho";
-import { addWhy } from "@/actions/addWhy";
-import { create5wDump } from "@/actions/create5wDump";
+import { addWhere } from "@/actions/fivewhy/addWhere";
+import { addWho } from "@/actions/fivewhy/addWho";
+import { addWhy } from "@/actions/fivewhy/addWhy";
+import { create5wDump } from "@/actions/fivewhy/create5wDump";
 import { Session } from "next-auth";
 
 type ClientBoardPageProps = {

@@ -1,10 +1,11 @@
 "use client";
 
-import { addUser } from "@/actions/addUser";
-import { changeUserBoardResps } from "@/actions/changeUserBoardResps";
-import { changeUserPassword } from "@/actions/changeUserPassword";
-import { changeUserRole } from "@/actions/changeUserRole";
-import { changeUserState } from "@/actions/changeUserState";
+import { addCommon } from "@/actions/user/addCommon";
+import { changeBoardResponsibilities } from "@/actions/user/changeBoardResponsibilities";
+import { changePassword } from "@/actions/user/changePassword";
+import { changeRole } from "@/actions/user/changeRole";
+import { changeStatus } from "@/actions/user/changeStatus";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +63,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { Role, Status } from "@/services/UserService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeftRight,
@@ -198,9 +200,16 @@ const addUserFormSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Contrasña requerida de minimo 8 caracteres" }),
-  role: z.enum(["worker", "board_moderator"], {
-    message: "Es necesario un rol",
-  }),
+  role: z.enum(
+    Object.values(Role).filter((val) => val !== Role.ADMIN) as [
+      Exclude<Role, Role.ADMIN>,
+      ...Exclude<Role, Role.ADMIN>[]
+    ],
+    {
+      message: "Es necesario un rol, que no sea ADMIN",
+    }
+  ),
+
   boardsIDsThatParticipate: z.array(z.number()),
 });
 
@@ -249,12 +258,13 @@ export default function UsersPage({
 
   function onAddUserSubmit(values: z.infer<typeof addUserFormSchema>) {
     try {
-      addUser({
+      addCommon({
         name: values.name,
         username: values.username,
         password: values.password,
         role: values.role,
-        boardsIDsThatParticipate: values.boardsIDsThatParticipate,
+        status: Status.ACTIVE,
+        boardsIdResponsible: values.boardsIDsThatParticipate,
         companyId: Number(user.companyId),
       });
       addUserForm.resetField("boardsIDsThatParticipate");
@@ -296,7 +306,7 @@ export default function UsersPage({
     userId: number
   ) {
     try {
-      changeUserPassword(userId, values.password);
+      changePassword({ userId: userId, newPassword: values.password });
       changePasswordForm.resetField("password");
       changePasswordForm.setValue("password", "");
       toast({
@@ -466,9 +476,9 @@ export default function UsersPage({
                       disabled={userRole == "admin" ? false : true}
                       onValueChange={(val) => {
                         try {
-                          changeUserRole({
+                          changeRole({
                             userId: LUser.id,
-                            newRole: val as "worker" | "board_moderator",
+                            role: val as Role.BOARD_MODERATOR | Role.WORKER,
                           });
                           //eslint-disable-next-line @typescript-eslint/no-unused-vars
                         } catch (e) {
@@ -489,13 +499,13 @@ export default function UsersPage({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem disabled value="admin">
+                        <SelectItem disabled value={Role.ADMIN}>
                           Administrador
                         </SelectItem>
-                        <SelectItem value="board_moderator">
+                        <SelectItem value={Role.BOARD_MODERATOR}>
                           Manager de Tablero
                         </SelectItem>
-                        <SelectItem value="worker">Trabajador</SelectItem>
+                        <SelectItem value={Role.WORKER}>Trabajador</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -529,10 +539,13 @@ export default function UsersPage({
                             variant={"ghost"}
                             size={"icon"}
                             onClick={() => {
-                              changeUserState(
-                                LUser.id,
-                                LUser.status == "active" ? "inactive" : "active"
-                              );
+                              changeStatus({
+                                userId: LUser.id,
+                                status:
+                                  LUser.status == "active"
+                                    ? Status.INACTIVE
+                                    : Status.ACTIVE,
+                              });
                             }}
                           >
                             <ArrowLeftRight className="w-4 h-4" />
@@ -547,9 +560,9 @@ export default function UsersPage({
                         <Select
                           onValueChange={(val) => {
                             try {
-                              changeUserRole({
+                              changeRole({
                                 userId: LUser.id,
-                                newRole: val as "worker" | "board_moderator",
+                                role: val as Role.BOARD_MODERATOR | Role.WORKER,
                               });
                               //eslint-disable-next-line @typescript-eslint/no-unused-vars
                             } catch (e) {
@@ -600,10 +613,10 @@ export default function UsersPage({
                                   )}
                                   onChangeValues={(val) => {
                                     const newBoardsRespIds: number[] = val;
-                                    changeUserBoardResps(
-                                      LUser.id,
-                                      newBoardsRespIds
-                                    );
+                                    changeBoardResponsibilities({
+                                      userId: LUser.id,
+                                      boardsIds: newBoardsRespIds,
+                                    });
                                     console.log(
                                       "Cambio value: ",
                                       newBoardsRespIds

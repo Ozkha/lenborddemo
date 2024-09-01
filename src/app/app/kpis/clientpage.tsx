@@ -1,7 +1,7 @@
 "use client";
 
-import addKpi from "@/actions/addKpi";
-import updateKpi from "@/actions/updateKpi";
+import addKpi from "@/actions/kpi/addKpi";
+import updateKpi from "@/actions/kpi/updateKpi";
 import { Button } from "@/components/ui/button";
 import {
   Card,
