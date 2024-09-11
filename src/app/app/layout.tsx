@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db as database } from "@/db";
-import { boards, userBoardResponsabiliy, users } from "@/db/schema";
+import { boards, comapnies, userBoardResponsabiliy, users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import Header from "@/components/header";
 import { redirect } from "next/navigation";
@@ -33,9 +33,19 @@ export default async function AppLayout({
     .from(users)
     .where(sql`${users.id}=${user.id}`);
 
+  const [companyInfo] = await db
+    .select()
+    .from(comapnies)
+    .where(sql`${comapnies.id}=${user.companyId}`);
+
+  let companyName = "";
+  if (companyInfo.name) {
+    companyName = companyInfo.name;
+  }
+
   if (userInfo.role == "worker") {
     return (
-      <Header hideSheet={true} user={user}>
+      <Header hideSheet={true} user={user} companyInfo={{ name: companyName }}>
         {children}
       </Header>
     );
@@ -65,6 +75,7 @@ export default async function AppLayout({
           ? true
           : false
       }
+      companyInfo={{ name: companyName }}
       user={user}
       boardList={boardList}
     >

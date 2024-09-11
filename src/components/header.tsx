@@ -32,6 +32,7 @@ type HeaderProps = {
   boardList?: { id: number; name: string; companyId: number }[];
   children: React.ReactNode;
   hideSheet?: boolean;
+  companyInfo: { name: string };
 };
 
 export default function Header({
@@ -39,6 +40,7 @@ export default function Header({
   boardList,
   children,
   hideSheet,
+  companyInfo,
 }: HeaderProps) {
   const searchParams = useSearchParams();
   const pathName = usePathname();
@@ -62,7 +64,7 @@ export default function Header({
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold"
                 >
-                  <Package2 className="h-6 w-6" />
+                  <p>{companyInfo.name}</p>
                   <span className="sr-only">Lenbord</span>
                 </Link>
                 <Link
@@ -137,8 +139,10 @@ export default function Header({
             </SheetContent>
           </Sheet>
         )}
-
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <div className="hidden md:inline-block font-semibold">
+            {companyInfo.name}
+          </div>
           <div className="ml-auto flex-1 sm:flex-initial">
             {user.name || "Sin nombre"}
           </div>
