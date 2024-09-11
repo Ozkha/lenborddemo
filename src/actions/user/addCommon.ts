@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { Role, Status, SUser, UserService } from "../../services/UserService";
+import { Role, Status, SUser, UserService } from "../../core/UserService";
 import { db } from "@/db";
 import { revalidatePath } from "next/cache";
 

@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { z } from "zod";
-import { UserService } from "@/services/UserService";
+import { UserService } from "@/core/UserService";
 
 const validationSchema = z.object({
   userId: z.number(),

@@ -6,8 +6,14 @@ import { config } from "dotenv";
 config({ path: ".env" });
 
 export const connection = createConnection(process.env.DATABASE_URL!);
+export const testConnection = createConnection(process.env.TEST_DATABASE_URL!);
 
 export const db = (async () => {
+  const waited = await connection;
+  return drizzle(waited, { schema, mode: "default" });
+})();
+
+export const test_db = (async () => {
   const waited = await connection;
   return drizzle(waited, { schema, mode: "default" });
 })();

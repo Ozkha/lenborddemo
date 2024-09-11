@@ -1,8 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { Role, Status, UserService } from "../../services/UserService";
-import { CompanyService } from "@/services/CompanyService";
+import { Role, Status, UserService } from "../../core/UserService";
+import { CompanyService } from "@/core/CompanyService";
 import { db } from "@/db";
 
 const validationSchema = z.object({

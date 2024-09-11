@@ -63,7 +63,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { Role, Status } from "@/services/UserService";
+import { Role, Status } from "@/core/UserService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeftRight,

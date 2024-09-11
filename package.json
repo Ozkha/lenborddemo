@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "npx vitest",
     "db:generate": "npx drizzle-kit generate:mysql --schema ./src/db/schema.ts --out=./src/db/migrations",
     "db:migrate": "npx drizzle-kit migrate --config=drizzle.config.ts",
     "db:drop": "npx drizzle-kit drop --config=drizzle.config.ts"
@@ -63,6 +64,7 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.0.5"
   }
 }
