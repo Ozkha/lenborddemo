@@ -6,7 +6,7 @@ import { desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 type setKpiTrackingDayValueProps = {
-  date: Date;
+  date: { year: number; monthIndex: number; day: number };
   areaId: number;
   kpiId: number;
   values: number[];
@@ -28,9 +28,9 @@ export async function setKpiTrackingDayValue({
     .select()
     .from(kpiMetric_tracking)
     .where(
-      sql`day(${kpiMetric_tracking.date})=${date.getDate()} and month(${
+      sql`day(${kpiMetric_tracking.date})=${date.year} and month(${
         kpiMetric_tracking.date
-      }) = ${date.getMonth() + 1} and ${
+      }) = ${date.monthIndex + 1} and ${
         kpiMetric_tracking.areaId
       } = ${areaId} and ${kpiMetric_tracking.kpiId} = ${kpiId}`
     );
@@ -70,7 +70,7 @@ export async function setKpiTrackingDayValue({
   // FIXME: PARECE: CHECARLO DESPUES. Eta pasando que aparentemente en lugar de actualiza, crea uno nuevo.
   if (willInsert) {
     await db.insert(kpiMetric_tracking).values({
-      date: date,
+      date: new Date(date.year, date.monthIndex, date.day),
       areaId: areaId,
       kpiId: kpiId,
       kpiGoalId: lastKpiGoal.id,

@@ -199,7 +199,11 @@ export default function BoardPage({
 
     try {
       setKpiTrackingDayValue({
-        date: fecha,
+        date: {
+          year: values.year,
+          monthIndex: values.month - 1,
+          day: values.day,
+        },
         areaId: values.areaId,
         kpiId: values.kpiId,
         diaInhabil: values.diaInhabil,
