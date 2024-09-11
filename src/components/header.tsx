@@ -4,7 +4,6 @@ import {
   CircleUser,
   Gauge,
   ListTodo,
-  Package2,
   PanelLeftOpen,
   Plus,
   Users,
