@@ -1,4 +1,4 @@
-import { Status, UserRepository } from "@/core/repositories/UserRepository";
+import { UserRepository } from "@/core/repositories/UserRepository";
 
 type UpdateBoardResponsabilitiesProps = {
   id: number;

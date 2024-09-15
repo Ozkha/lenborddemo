@@ -1,8 +1,4 @@
-import {
-  Role,
-  Status,
-  UserRepository,
-} from "@/core/repositories/UserRepository";
+import { Role, UserRepository } from "@/core/repositories/UserRepository";
 
 type UpdateRoleProps = {
   id: number;
