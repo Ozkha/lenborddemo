@@ -1,9 +1,14 @@
 "use server";
 
 import { z } from "zod";
-import { Role, Status, SUser, UserService } from "../../core/UserService";
 import { db } from "@/db";
 import { revalidatePath } from "next/cache";
+import {
+  Role,
+  Status,
+  UserRepository,
+} from "@/core/repositories/UserRepository";
+import { CreateNoAdminUserWrapper } from "@/core/usecases/users/CreateNoAdminUser";
 
 const validationSchema = z.object({
   name: z.string(),
@@ -29,7 +34,9 @@ const validationSchema = z.object({
   companyId: z.number({ message: "Debe pertenecer a una empresa" }),
 });
 
-export async function addCommon(user: z.infer<typeof validationSchema>) {
+export async function createNoAdminUser(
+  user: z.infer<typeof validationSchema>
+) {
   const validatedFields = validationSchema.safeParse(user);
 
   if (!validatedFields.success) {
@@ -39,14 +46,20 @@ export async function addCommon(user: z.infer<typeof validationSchema>) {
   }
 
   const database = await db;
-  const userService = new UserService(database);
+  const userRepo = new UserRepository(database);
+  const createNoAdminUser = CreateNoAdminUserWrapper(userRepo);
 
-  const userAdded = await userService.add(validatedFields.data);
-
-  await userService.changeBoardResponsibilities(
-    userAdded.id,
-    validatedFields.data.boardsIdResponsible
-  );
+  await createNoAdminUser({
+    user: {
+      name: validatedFields.data.name,
+      username: validatedFields.data.username,
+      password: validatedFields.data.password,
+      role: validatedFields.data.role,
+      status: validatedFields.data.status,
+    },
+    boardResponsabilities: validatedFields.data.boardsIdResponsible,
+    companyId: validatedFields.data.companyId,
+  });
 
   revalidatePath("/app/users");
 }

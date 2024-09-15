@@ -1,11 +1,10 @@
 "use client";
 
-import { addCommon } from "@/actions/user/addCommon";
-import { changeBoardResponsibilities } from "@/actions/user/changeBoardResponsibilities";
-import { changePassword } from "@/actions/user/changePassword";
-import { changeRole } from "@/actions/user/changeRole";
-import { changeStatus } from "@/actions/user/changeStatus";
-
+import { createNoAdminUser } from "@/actions/user/createNoAdminUser";
+import { UpdateBoardResponsabilities } from "@/actions/user/updateBoardResponsabilities";
+import { UpdatePassword } from "@/actions/user/updatePassword";
+import { updateRole } from "@/actions/user/updateRole";
+import { updateStatus } from "@/actions/user/updateStatus";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,7 +62,6 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { Role, Status } from "@/core/UserService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeftRight,
@@ -77,6 +75,7 @@ import { Session } from "next-auth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Role, Status } from "@/core/repositories/UserRepository";
 
 type FacetedFilterProps = {
   title: string;
@@ -258,7 +257,7 @@ export default function UsersPage({
 
   function onAddUserSubmit(values: z.infer<typeof addUserFormSchema>) {
     try {
-      addCommon({
+      createNoAdminUser({
         name: values.name,
         username: values.username,
         password: values.password,
@@ -275,6 +274,7 @@ export default function UsersPage({
       addUserForm.resetField("password");
       addUserForm.setValue("password", "");
 
+      // addUserForm.resetField("role");
       addUserForm.resetField("role");
 
       addUserForm.resetField("username");
@@ -306,7 +306,7 @@ export default function UsersPage({
     userId: number
   ) {
     try {
-      changePassword({ userId: userId, newPassword: values.password });
+      UpdatePassword({ userId: userId, newPassword: values.password });
       changePasswordForm.resetField("password");
       changePasswordForm.setValue("password", "");
       toast({
@@ -475,10 +475,13 @@ export default function UsersPage({
                     <Select
                       disabled={userRole == "admin" ? false : true}
                       onValueChange={(val) => {
+                        const newRole = val as
+                          | Role.BOARD_MODERATOR
+                          | Role.WORKER;
                         try {
-                          changeRole({
+                          updateRole({
                             userId: LUser.id,
-                            role: val as Role.BOARD_MODERATOR | Role.WORKER,
+                            role: newRole,
                           });
                           //eslint-disable-next-line @typescript-eslint/no-unused-vars
                         } catch (e) {
@@ -539,7 +542,7 @@ export default function UsersPage({
                             variant={"ghost"}
                             size={"icon"}
                             onClick={() => {
-                              changeStatus({
+                              updateStatus({
                                 userId: LUser.id,
                                 status:
                                   LUser.status == "active"
@@ -560,7 +563,7 @@ export default function UsersPage({
                         <Select
                           onValueChange={(val) => {
                             try {
-                              changeRole({
+                              updateRole({
                                 userId: LUser.id,
                                 role: val as Role.BOARD_MODERATOR | Role.WORKER,
                               });
@@ -613,7 +616,7 @@ export default function UsersPage({
                                   )}
                                   onChangeValues={(val) => {
                                     const newBoardsRespIds: number[] = val;
-                                    changeBoardResponsibilities({
+                                    UpdateBoardResponsabilities({
                                       userId: LUser.id,
                                       boardsIds: newBoardsRespIds,
                                     });

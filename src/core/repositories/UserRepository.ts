@@ -2,9 +2,6 @@ import { boards, userBoardResponsabiliy, users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { MySql2Database } from "drizzle-orm/mysql2";
 
-// TODO: Aqui estoy ----
-// Seguir con el testing de este repo.
-
 export enum Role {
   ADMIN = "admin",
   BOARD_MODERATOR = "board_moderator",

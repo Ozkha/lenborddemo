@@ -1,6 +1,6 @@
 "use client";
 
-import { addAdmin } from "@/actions/user/addAdmin";
+import { createCompanyAdminUser } from "@/actions/user/createCompanyAdminUser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -150,7 +150,7 @@ export default function SignInClientPage() {
                     return;
                   }
 
-                  await addAdmin({
+                  await createCompanyAdminUser({
                     username: validatedFields.data.username,
                     password: validatedFields.data.password,
                     companyName: validatedFields.data.companyName,

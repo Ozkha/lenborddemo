@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { object, string, ZodError } from "zod";
+import { isEqualToHashedPassword } from "@/core/security/isEqualToHashedPassword";
 
 const signInSchema = object({
   username: string({ required_error: "Usuario es requerido" }).min(
@@ -97,7 +98,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error("Este usuario esta bloqueado");
           }
 
-          const isCorrectPassword = bcrypt.compareSync(password, user.password);
+          const isCorrectPassword = isEqualToHashedPassword(
+            password,
+            user.password
+          );
 
           if (!isCorrectPassword) {
             throw new Error("Usuario o Contraseña Incorrecta");

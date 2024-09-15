@@ -1,7 +1,8 @@
 "use server";
 
+import { Role, UserRepository } from "@/core/repositories/UserRepository";
+import { UpdateRoleWrapper } from "@/core/usecases/users/UpdateRole";
 import { db } from "@/db";
-import { Role, UserService } from "@/core/UserService";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -18,7 +19,7 @@ const validationSchema = z.object({
   ),
 });
 
-export async function changeRole(props: z.infer<typeof validationSchema>) {
+export async function updateRole(props: z.infer<typeof validationSchema>) {
   const validatedFields = validationSchema.safeParse(props);
 
   if (!validatedFields.success) {
@@ -28,12 +29,13 @@ export async function changeRole(props: z.infer<typeof validationSchema>) {
   }
 
   const database = await db;
-  const userService = new UserService(database);
+  const userService = new UserRepository(database);
+  const updateUserRole = UpdateRoleWrapper(userService);
 
-  await userService.changeRole(
-    validatedFields.data.userId,
-    validatedFields.data.role
-  );
+  const x = await updateUserRole({
+    id: validatedFields.data.userId,
+    role: validatedFields.data.role,
+  });
 
   revalidatePath("/app/users");
 }

@@ -1,7 +1,9 @@
 "use server";
 
+import { Status, UserRepository } from "@/core/repositories/UserRepository";
+import { UpdateStatusWrapper } from "@/core/usecases/users/UpdateStatus";
 import { db } from "@/db";
-import { Status, UserService } from "@/core/UserService";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -10,7 +12,7 @@ const validationSchema = z.object({
   status: z.nativeEnum(Status),
 });
 
-export async function changeStatus(props: z.infer<typeof validationSchema>) {
+export async function updateStatus(props: z.infer<typeof validationSchema>) {
   const validatedFields = validationSchema.safeParse(props);
 
   if (!validatedFields.success) {
@@ -20,12 +22,13 @@ export async function changeStatus(props: z.infer<typeof validationSchema>) {
   }
 
   const database = await db;
-  const userService = new UserService(database);
+  const userService = new UserRepository(database);
+  const updateStatus = UpdateStatusWrapper(userService);
 
-  await userService.changeStatus(
-    validatedFields.data.userId,
-    validatedFields.data.status
-  );
+  await updateStatus({
+    id: validatedFields.data.userId,
+    status: validatedFields.data.status,
+  });
 
   revalidatePath("/app/users");
 }

@@ -1,8 +1,9 @@
 "use server";
 
+import { UserRepository } from "@/core/repositories/UserRepository";
+import { UpdatePasswordWrapper } from "@/core/usecases/users/UpdatePassword";
 import { db } from "@/db";
 import { z } from "zod";
-import { UserService } from "@/core/UserService";
 
 const validationSchema = z.object({
   userId: z.number(),
@@ -13,7 +14,7 @@ const validationSchema = z.object({
     .regex(/[0-9]/, "La contraseña debe tener al menos un número"),
 });
 
-export async function changePassword(props: z.infer<typeof validationSchema>) {
+export async function UpdatePassword(props: z.infer<typeof validationSchema>) {
   const validatedFields = validationSchema.safeParse(props);
 
   if (!validatedFields.success) {
@@ -23,10 +24,11 @@ export async function changePassword(props: z.infer<typeof validationSchema>) {
   }
 
   const database = await db;
-  const userService = new UserService(database);
+  const userRepo = new UserRepository(database);
+  const updatePass = UpdatePasswordWrapper(userRepo);
 
-  await userService.changePassword(
-    validatedFields.data.userId,
-    validatedFields.data.newPassword
-  );
+  await updatePass({
+    id: validatedFields.data.userId,
+    newPassword: validatedFields.data.newPassword,
+  });
 }
