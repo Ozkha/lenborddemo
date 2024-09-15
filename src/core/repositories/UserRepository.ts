@@ -85,8 +85,10 @@ interface IUserRepository {
 // IMPLEMENTATION ================================================
 
 export class UserRepository implements IUserRepository {
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   private db: MySql2Database<any>;
 
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(db: MySql2Database<any>) {
     this.db = db;
   }
