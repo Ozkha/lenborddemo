@@ -1,8 +1,6 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-import bcrypt from "bcryptjs";
-
 import { object, string, ZodError } from "zod";
 import { isEqualToHashedPassword } from "@/core/security/isEqualToHashedPassword";
 
