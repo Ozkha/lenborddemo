@@ -32,7 +32,7 @@ export async function updateRole(props: z.infer<typeof validationSchema>) {
   const userService = new UserRepository(database);
   const updateUserRole = UpdateRoleWrapper(userService);
 
-  const x = await updateUserRole({
+  await updateUserRole({
     id: validatedFields.data.userId,
     role: validatedFields.data.role,
   });

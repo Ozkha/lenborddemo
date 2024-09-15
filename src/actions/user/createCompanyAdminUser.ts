@@ -40,7 +40,7 @@ export async function createCompanyAdminUser(
     companyRepository
   );
 
-  const userCreated = await creteAdminUser({
+  await creteAdminUser({
     user: {
       username: validatedFields.data.username,
       password: validatedFields.data.password,
