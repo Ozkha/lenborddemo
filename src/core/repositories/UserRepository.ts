@@ -44,6 +44,16 @@ interface IUserRepository {
     boardsResponsibilities: { id: number; boardId: number; name: string }[];
   }>;
 
+  deleteAllBoardResponsibilities(id: number): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+    boardsResponsibilities: { id: number; boardId: number; name: string }[];
+  }>;
+
   setPassword(
     id: number,
     password: string
@@ -203,6 +213,84 @@ export class UserRepository implements IUserRepository {
       .where(sql`${users.id}=${userCreatedResponse[0].insertId}`);
 
     return userSelected;
+  }
+
+  async deleteAllBoardResponsibilities(id: number): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+    boardsResponsibilities: { id: number; boardId: number; name: string }[];
+  }> {
+    await this.db
+      .delete(userBoardResponsabiliy)
+      .where(sql`${userBoardResponsabiliy.userId}=${id}`);
+
+    const userListRaw = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        role: users.role,
+        status: users.status,
+        companyId: users.companyId,
+        userBoardResponsability: {
+          id: userBoardResponsabiliy.id,
+          boardId: userBoardResponsabiliy.boardId,
+          name: boards.name,
+        },
+      })
+      .from(users)
+      .where(sql`${users.id}=${id}`)
+      .leftJoin(
+        userBoardResponsabiliy,
+        sql`${userBoardResponsabiliy.userId}=${users.id}`
+      )
+      .leftJoin(boards, sql`${boards.id}=${userBoardResponsabiliy.boardId}`);
+
+    const userUpdated = Object.values(
+      userListRaw.reduce((acc, user) => {
+        acc = {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+          companyId: user.companyId,
+        };
+
+        // @ts-expect-error user.id or number can be used to acces to a key of an object in this case.
+        let accRef: [] | undefined = acc["userBoardResponsability"];
+
+        if (typeof accRef == "undefined") {
+          accRef = [];
+        } else {
+          const userReponsibilities = user.userBoardResponsability;
+          if (
+            userReponsibilities.id !== null &&
+            userReponsibilities.boardId !== null &&
+            userReponsibilities.name !== null
+          ) {
+            // @ts-expect-error At this momets there will not be null.
+            accRef.push(userReponsibilities);
+          }
+        }
+
+        return acc;
+      }, {})
+    ) as unknown as {
+      id: number;
+      name: string;
+      username: string;
+      role: Role;
+      status: Status;
+      companyId: number;
+      boardsResponsibilities: { id: number; boardId: number; name: string }[];
+    };
+
+    return userUpdated;
   }
 
   async setBoardResponsibilities(
