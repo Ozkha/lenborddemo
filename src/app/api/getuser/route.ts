@@ -1,4 +1,5 @@
-import { db as database } from "@/db";
+import { UserRepository } from "@/core/repositories/UserRepository";
+import { db } from "@/db";
 import { users } from "@/db/schema";
 import { sql } from "drizzle-orm";
 
@@ -8,17 +9,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const username = searchParams.get("username");
-
-  const dbb = await database;
-
-  const [userFetched] = await dbb
-    .select()
-    .from(users)
-    .where(sql`${users.username}=${username}`);
-
-  if (!userFetched) {
+  if (!username) {
     return new Response(null);
   }
 
-  return Response.json(userFetched);
+  const database = await db;
+  const userRepo = new UserRepository(database);
+
+  const userSelected = await userRepo.getByUsername(username);
+
+  if (!userSelected) {
+    return new Response(null);
+  }
+
+  return Response.json(userSelected);
 }
