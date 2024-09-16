@@ -5,15 +5,17 @@ import { config } from "dotenv";
 
 config({ path: ".env" });
 
-export const connection = createConnection(process.env.DATABASE_URL!);
-export const testConnection = createConnection(process.env.TEST_DATABASE_URL!);
+let connectionTemp;
+
+if (process.env.ENV_MODE == "TEST") {
+  connectionTemp = process.env.TEST_DATABASE_URL!;
+} else {
+  connectionTemp = process.env.DATABASE_URL!;
+}
+
+export const connection = createConnection(connectionTemp);
 
 export const db = (async () => {
-  const waited = await connection;
-  return drizzle(waited, { schema, mode: "default" });
-})();
-
-export const test_db = (async () => {
   const waited = await connection;
   return drizzle(waited, { schema, mode: "default" });
 })();
