@@ -80,6 +80,26 @@ interface IUserRepository {
     status: Status;
     companyId: number;
   }>;
+
+  getById(id: number): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    password: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+  } | null>;
+
+  getByUsername(username: string): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    password: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+  } | null>;
 }
 
 // IMPLEMENTATION ================================================
@@ -91,6 +111,64 @@ export class UserRepository implements IUserRepository {
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(db: MySql2Database<any>) {
     this.db = db;
+  }
+  async getByUsername(username: string): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    password: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+  } | null> {
+    const [selectedUsersResponse] = await this.db
+      .select()
+      .from(users)
+      .where(sql`${users.username}=${username}`)
+      .limit(1);
+
+    if (!selectedUsersResponse) {
+      return null;
+    }
+
+    return {
+      id: selectedUsersResponse.id,
+      name: selectedUsersResponse.name,
+      username: selectedUsersResponse.username,
+      password: selectedUsersResponse.password,
+      role: selectedUsersResponse.role as Role,
+      status: selectedUsersResponse.status as Status,
+      companyId: selectedUsersResponse.companyId,
+    };
+  }
+  async getById(id: number): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    password: string;
+    role: Role;
+    status: Status;
+    companyId: number;
+  } | null> {
+    const [selectedUsersResponse] = await this.db
+      .select()
+      .from(users)
+      .where(sql`${users.id}=${id}`)
+      .limit(1);
+
+    if (!selectedUsersResponse) {
+      return null;
+    }
+
+    return {
+      id: selectedUsersResponse.id,
+      name: selectedUsersResponse.name,
+      username: selectedUsersResponse.username,
+      password: selectedUsersResponse.password,
+      role: selectedUsersResponse.role as Role,
+      status: selectedUsersResponse.status as Status,
+      companyId: selectedUsersResponse.companyId,
+    };
   }
 
   async create(user: {
