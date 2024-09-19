@@ -198,7 +198,9 @@ const addUserFormSchema = z.object({
   }),
   password: z
     .string()
-    .min(8, { message: "Contrasña requerida de minimo 8 caracteres" }),
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/[A-Z]/, "La contraseña debe tener al menos una letra mayúscula")
+    .regex(/[0-9]/, "La contraseña debe tener al menos un número"),
   role: z.enum(
     Object.values(Role).filter((val) => val !== Role.ADMIN) as [
       Exclude<Role, Role.ADMIN>,
@@ -255,46 +257,49 @@ export default function UsersPage({
     },
   });
 
-  function onAddUserSubmit(values: z.infer<typeof addUserFormSchema>) {
-    try {
-      createNoAdminUser({
-        name: values.name,
-        username: values.username,
-        password: values.password,
-        role: values.role,
-        status: Status.ACTIVE,
-        boardsIdResponsible: values.boardsIDsThatParticipate,
-        companyId: Number(user.companyId),
-      });
-      addUserForm.resetField("boardsIDsThatParticipate");
+  async function onAddUserSubmit(values: z.infer<typeof addUserFormSchema>) {
+    const createNoAdminUserResponse = await createNoAdminUser({
+      name: values.name,
+      username: values.username,
+      password: values.password,
+      role: values.role,
+      status: Status.ACTIVE,
+      boardsIdResponsible: values.boardsIDsThatParticipate,
+      companyId: Number(user.companyId),
+    });
 
-      addUserForm.resetField("name");
-      addUserForm.setValue("name", "");
-
-      addUserForm.resetField("password");
-      addUserForm.setValue("password", "");
-
-      // addUserForm.resetField("role");
-      addUserForm.resetField("role");
-
-      addUserForm.resetField("username");
-      addUserForm.setValue("username", "");
-
-      // TODO: Agregar aqui el reset para que se borran los datos de la UI y aparte que no esten
-      // en el estado del form.
-
-      toast({
-        title: "Okay!",
-        description: "Nuevo Usuario creado con exito",
-      });
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+    if (typeof createNoAdminUserResponse.errors !== "undefined") {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No fue posbible crear el usuario",
+        description:
+          "No fue posbible crear el usuario" +
+          createNoAdminUserResponse.errors.toString(),
       });
+      return;
     }
+
+    addUserForm.resetField("boardsIDsThatParticipate");
+
+    addUserForm.resetField("name");
+    addUserForm.setValue("name", "");
+
+    addUserForm.resetField("password");
+    addUserForm.setValue("password", "");
+
+    // addUserForm.resetField("role");
+    addUserForm.resetField("role");
+
+    addUserForm.resetField("username");
+    addUserForm.setValue("username", "");
+
+    // TODO: Agregar aqui el reset para que se borran los datos de la UI y aparte que no esten
+    // en el estado del form.
+
+    toast({
+      title: "Okay!",
+      description: "Nuevo Usuario creado con exito",
+    });
   }
 
   const changePasswordForm = useForm<z.infer<typeof changePasswordFormSchema>>({
