@@ -40,26 +40,31 @@ export async function createNoAdminUser(
   const validatedFields = validationSchema.safeParse(user);
 
   if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+    return { errors: validatedFields.error.flatten().fieldErrors };
   }
 
-  const database = await db;
-  const userRepo = new UserRepository(database);
-  const createNoAdminUser = CreateNoAdminUserWrapper(userRepo);
+  try {
+    const database = await db;
+    const userRepo = new UserRepository(database);
+    const createNoAdminUser = CreateNoAdminUserWrapper(userRepo);
 
-  await createNoAdminUser({
-    user: {
-      name: validatedFields.data.name,
-      username: validatedFields.data.username,
-      password: validatedFields.data.password,
-      role: validatedFields.data.role,
-      status: validatedFields.data.status,
-    },
-    boardResponsabilities: validatedFields.data.boardsIdResponsible,
-    companyId: validatedFields.data.companyId,
-  });
+    await createNoAdminUser({
+      user: {
+        name: validatedFields.data.name,
+        username: validatedFields.data.username,
+        password: validatedFields.data.password,
+        role: validatedFields.data.role,
+        status: validatedFields.data.status,
+      },
+      boardResponsabilities: validatedFields.data.boardsIdResponsible,
+      companyId: validatedFields.data.companyId,
+    });
 
-  revalidatePath("/app/users");
+    revalidatePath("/app/users");
+    return { message: "No Admin user created successfully!" };
+
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (e) {
+    return { errors: "Persistance proccess related error." };
+  }
 }
