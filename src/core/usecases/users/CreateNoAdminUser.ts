@@ -36,12 +36,24 @@ export function CreateNoAdminUserWrapper(userRepo: UserRepository) {
       companyId: companyId,
     });
 
-    const userBoardReponsabilitiesUpdated =
-      await userRepo.setBoardResponsibilities(
-        userCreated.id,
-        boardResponsabilities
-      );
+    if (boardResponsabilities.length > 0) {
+      const userBoardReponsabilitiesUpdated =
+        await userRepo.setBoardResponsibilities(
+          userCreated.id,
+          boardResponsabilities
+        );
 
-    return userBoardReponsabilitiesUpdated;
+      return userBoardReponsabilitiesUpdated;
+    }
+
+    return {
+      id: userCreated.id,
+      name: userCreated.name,
+      username: userCreated.username,
+      role: userCreated.role,
+      status: userCreated.status,
+      companyId: userCreated.companyId,
+      boardsResponsibilities: [],
+    };
   };
 }
