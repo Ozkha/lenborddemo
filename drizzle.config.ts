@@ -11,8 +11,6 @@ if (process.env.ENV_MODE == "TEST") {
   urldatabase = process.env.DATABASE_URL!;
 }
 
-console.log("⚡", urldatabase);
-
 export default defineConfig({
   //@ts-ignore
   dialect: "mysql", // "mysql" | "sqlite" | "postgresql"
