@@ -36,15 +36,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { z } from "zod";
-import { changeBoardName } from "@/actions/board/changeBoardName";
+import { UpdateBoardName } from "@/actions/board/updateBoardName";
 import { toast } from "@/components/ui/use-toast";
-import { addAreaInBoard } from "@/actions/area/addArea";
-import { setKpiTrackingDayValue } from "@/actions/kpi/setKpiTackingDayValue";
+import { CreateArea } from "@/actions/area/createArea";
+import { updateTrackingDateValue } from "@/actions/kpi/updateTrackingDateValue";
 import { useRouter } from "next/navigation";
 import { addWhere } from "@/actions/fivewhy/addWhere";
 import { addWho } from "@/actions/fivewhy/addWho";
 import { addWhy } from "@/actions/fivewhy/addWhy";
-import { create5wDump } from "@/actions/fivewhy/create5wDump";
+import { registerFiveWhy } from "@/actions/fivewhy/registerFiveWhy";
 import { Session } from "next-auth";
 
 type ClientBoardPageProps = {
@@ -124,9 +124,9 @@ export default function BoardPage({
 
   function onSubmitChangeName(values: z.infer<typeof boardNameFormSchema>) {
     try {
-      changeBoardName({
+      UpdateBoardName({
         name: values.name,
-        boardId: boardInfo.id,
+        id: boardInfo.id,
       });
 
       toast({
@@ -153,7 +153,7 @@ export default function BoardPage({
 
   function obSubmitNewAreaInBoard(values: z.infer<typeof newAreaFormSchema>) {
     try {
-      addAreaInBoard({
+      CreateArea({
         name: values.name,
         boardId: boardInfo.id,
         companyId: Number(user.companyId),
@@ -198,7 +198,7 @@ export default function BoardPage({
     fecha.setMilliseconds(ahora.getMilliseconds());
 
     try {
-      setKpiTrackingDayValue({
+      updateTrackingDateValue({
         date: fecha,
         areaId: values.areaId,
         kpiId: values.kpiId,
@@ -224,7 +224,7 @@ export default function BoardPage({
     values: z.infer<typeof addNew5WhysEntrySchema>
   ) {
     try {
-      create5wDump({
+      registerFiveWhy({
         date: values.when,
         what: values.what,
         whereId: values.whereId,
@@ -637,13 +637,29 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     try {
-                                      const newWhereId = await addWhere({
+                                      const newWhere = await addWhere({
                                         label: val,
                                         companyId: Number(user.companyId),
                                       });
+
+                                      if (newWhere!.hasOwnProperty("erros")) {
+                                        throw Error(
+                                          "No fue posible crear el where"
+                                        );
+                                      }
+
+                                      const newWhereParsed = newWhere as {
+                                        id: number;
+                                        label: string;
+                                        companyId: number;
+                                      };
+
                                       setWheresList([
                                         ...wheresList,
-                                        { value: newWhereId, label: val },
+                                        {
+                                          value: newWhereParsed.id,
+                                          label: val,
+                                        },
                                       ]);
                                       setVal("");
                                       //eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -685,13 +701,29 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     try {
-                                      const newWhoId = await addWho({
-                                        label: val,
+                                      const newWho = await addWho({
+                                        name: val,
                                         companyId: Number(user.companyId),
                                       });
+
+                                      if (newWho!.hasOwnProperty("erros")) {
+                                        throw Error(
+                                          "No fue posible crear el who"
+                                        );
+                                      }
+
+                                      const newWhoParsed = newWho as {
+                                        id: number;
+                                        name: string;
+                                        companyId: number;
+                                      };
+
                                       setWhosList([
                                         ...whosList,
-                                        { value: newWhoId, label: val },
+                                        {
+                                          value: newWhoParsed.id,
+                                          label: val,
+                                        },
                                       ]);
                                       setVal("");
                                       //eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -733,13 +765,38 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     try {
+                                      const newWhy = await addWhy({
+                                        label: val,
+                                        companyId: Number(user.companyId),
+                                      });
+
+                                      if (newWhy!.hasOwnProperty("erros")) {
+                                        throw Error(
+                                          "No fue posible crear el who"
+                                        );
+                                      }
+
+                                      const newWhyParsed = newWhy as {
+                                        id: number;
+                                        label: string;
+                                        companyId: number;
+                                      };
+
+                                      setWhysList([
+                                        ...whysList,
+                                        {
+                                          value: newWhyParsed.id,
+                                          label: val,
+                                        },
+                                      ]);
+                                      // --------------
                                       const newWhyId = await addWhy({
                                         label: val,
                                         companyId: Number(user.companyId),
                                       });
                                       setWhysList([
                                         ...whysList,
-                                        { value: newWhyId, label: val },
+                                        { value: newWhyParsed.id, label: val },
                                       ]);
                                       setVal("");
                                       //eslint-disable-next-line @typescript-eslint/no-unused-vars

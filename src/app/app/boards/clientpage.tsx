@@ -1,6 +1,6 @@
 "use client";
 
-import { addBoard } from "@/actions/board/addboard";
+import { CreateBoard } from "@/actions/board/createBoard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowRight, Plus } from "lucide-react";
@@ -26,7 +26,7 @@ export default function BoardsPage({
           </p>
           <Button
             onClick={() => {
-              addBoard({
+              CreateBoard({
                 name: "sin nombre",
                 companyId: Number(user.companyId),
               });

@@ -1,5 +1,5 @@
 "use client";
-import { changeTaskState } from "@/actions/task/changeTaskState";
+import { UpdateTaskStatus } from "@/actions/task/updateTaskState";
 import { deleteTask } from "@/actions/task/deleteTask";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import {
 import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Status } from "@/core/repositories/TaskRepository";
 
 type FacetedFilterProps = {
   title: string;
@@ -263,7 +264,7 @@ function TaskCard({
             <>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "inprogress");
+                  UpdateTaskStatus({ id, status: Status.INPROGRESS });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -273,7 +274,7 @@ function TaskCard({
               </Button>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "completed");
+                  UpdateTaskStatus({ id, status: Status.COMPLETED });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -287,7 +288,7 @@ function TaskCard({
             <>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "todo");
+                  UpdateTaskStatus({ id, status: Status.TODO });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -297,7 +298,7 @@ function TaskCard({
               </Button>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "completed");
+                  UpdateTaskStatus({ id, status: Status.COMPLETED });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -311,7 +312,7 @@ function TaskCard({
             <>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "todo");
+                  UpdateTaskStatus({ id, status: Status.TODO });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -321,7 +322,7 @@ function TaskCard({
               </Button>
               <Button
                 onClick={() => {
-                  changeTaskState(id, "inprogress");
+                  UpdateTaskStatus({ id, status: Status.INPROGRESS });
                 }}
                 variant={"outline"}
                 className="w-full"
@@ -356,7 +357,7 @@ function TaskCard({
                 </Button>
                 <Button
                   onClick={() => {
-                    deleteTask(id);
+                    deleteTask({ id });
                   }}
                   variant={"destructive"}
                 >

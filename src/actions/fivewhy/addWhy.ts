@@ -1,19 +1,30 @@
 "use server";
 
-import { db as database } from "@/db";
-import { whys } from "@/db/schema";
+import { FiveWhyRepository } from "@/core/repositories/FiveWhyRepository";
+import { CreateWhyWrapper } from "@/core/usecases/fivewhy/CreateWhy";
+import { db } from "@/db";
+import { z } from "zod";
 
-type addWhysProps = {
-  label: string;
-  companyId: number;
-};
+const validationSchema = z.object({
+  label: z.string({ message: "Es necesario una etquieta para normarlo" }),
+  companyId: z.number({ message: "Es necesario un id de empresa" }),
+});
 
-export async function addWhy({ label, companyId }: addWhysProps) {
-  const db = await database;
+export async function addWhy(props: z.infer<typeof validationSchema>) {
+  const validatedFields = validationSchema.safeParse(props);
 
-  const addedWhysResp = await db
-    .insert(whys)
-    .values({ label: label, companyId: companyId });
+  if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors };
+  }
 
-  return addedWhysResp[0].insertId;
+  const database = await db;
+  const fivewhyRepo = new FiveWhyRepository(database);
+  const createWhy = CreateWhyWrapper(fivewhyRepo);
+
+  const whyCreated = await createWhy({
+    label: validatedFields.data.label,
+    companyId: validatedFields.data.companyId,
+  });
+
+  return whyCreated;
 }

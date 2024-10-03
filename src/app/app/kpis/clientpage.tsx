@@ -1,7 +1,6 @@
 "use client";
-
-import addKpi from "@/actions/kpi/addKpi";
-import updateKpi from "@/actions/kpi/updateKpi";
+import { updateKpiGoal } from "@/actions/kpi/updateKpiGoal";
+import { createKpi } from "@/actions/kpi/createKpi";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,6 +44,7 @@ import { Session } from "next-auth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { GoalLabel, Operator } from "@/core/repositories/KpiRepository";
 
 type CategoryBarProps = {
   data: {
@@ -252,11 +252,15 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
 
   async function onSubmit(values: z.infer<typeof kpiFormSchema>) {
     try {
-      addKpi({
+      createKpi({
         name: values.name,
         metric: values.metric,
         companyId: Number(user.companyId),
-        goal: values.goal,
+        goal: values.goal as {
+          label: GoalLabel;
+          operator: Operator;
+          amount: number;
+        }[],
       });
       kpiForm.reset();
       toast({
@@ -276,9 +280,13 @@ export default function KpisPage({ user, kpiList }: KpisPageProps) {
 
   async function onSubmitUpdate(values: z.infer<typeof kpiUpdateFormSchema>) {
     try {
-      updateKpi({
-        id: values.id,
-        newGoal: values.newGoal,
+      updateKpiGoal({
+        kpiId: values.id,
+        goal: values.newGoal as {
+          label: GoalLabel;
+          operator: Operator;
+          amount: number;
+        }[],
       });
       toast({
         variant: "default",

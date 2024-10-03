@@ -1,6 +1,6 @@
 "use client";
 
-import { get5wdump } from "@/actions/fivewhy/get5wdump";
+import { getFiveWhyRegister } from "@/actions/fivewhy/getFiveWhyRegistry";
 import MonthPicker from "@/components/ui-compounded/monthpicker";
 import { Tracker } from "@/components/ui-compounded/tracker";
 import { Badge } from "@/components/ui/badge";
@@ -66,9 +66,9 @@ import { useForm } from "react-hook-form";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { addTask } from "@/actions/task/addTask";
+import { CreateTask } from "@/actions/task/createTask";
 
-import { get5wDateTotalEntries } from "@/actions/fivewhy/get5wDateTotalEntries";
+import { getFiveWhyTotalEntries } from "@/actions/fivewhy/getFiveWhyTotalEntries";
 import { Session } from "next-auth";
 
 // TODO:
@@ -161,7 +161,7 @@ export default function AreaPage({
 
   function onAddTaskSubmit(values: z.infer<typeof formAddTaskSchema>) {
     try {
-      addTask({
+      CreateTask({
         title: values.title,
         boardId: areaInfo.board.id,
         areaId: areaInfo.id,
@@ -298,14 +298,46 @@ export default function AreaPage({
                           day
                         );
                         setSpecific5wsDate(newDate);
-                        setSpecificW5MaxPages(
-                          await get5wDateTotalEntries(areaInfo.id, newDate)
-                        );
-                        const dumps = await get5wdump(0, areaInfo.id, newDate);
+                        const ttlEntries = await getFiveWhyTotalEntries({
+                          areaId: 1,
+                          date: new Date(),
+                        });
 
-                        if (dumps) {
-                          setCurrentSpecific5W(dumps[0]);
+                        if (typeof ttlEntries !== "number") {
+                          throw Error(
+                            "No se loggro obtener el total de entradas"
+                          );
                         }
+
+                        setSpecificW5MaxPages(ttlEntries);
+                        const dumps = await getFiveWhyRegister({
+                          index: 0,
+                          areaId: areaInfo.id,
+                          date: newDate,
+                        });
+
+                        if (typeof dumps == null) {
+                          setCurrentSpecific5W(undefined);
+                        }
+
+                        if (dumps!.hasOwnProperty("errros")) {
+                          throw Error(
+                            "No fue posible hacer el getFiveWhyRegister"
+                          );
+                        }
+                        setCurrentSpecific5W(
+                          dumps as {
+                            id: number;
+                            date: Date;
+                            what: string;
+                            where: string;
+                            who: string;
+                            why: string;
+                            whyDetails: string | null;
+                            areaId: number;
+                            comapnyId: number;
+                          }
+                        );
 
                         setSpecificDay5WDialogOpen(true);
                       }}
@@ -863,13 +895,33 @@ export default function AreaPage({
                           onClick={async () => {
                             if (specificw5Page - 1 < 0) {
                             } else {
-                              const dumps = await get5wdump(
-                                specificw5Page - 1,
-                                areaInfo.id
-                              );
-                              if (dumps) {
-                                setCurrentSpecific5W(dumps[0]);
+                              const dumps = await getFiveWhyRegister({
+                                index: specificw5Page - 1,
+                                areaId: areaInfo.id,
+                              });
+
+                              if (typeof dumps == null) {
+                                setCurrentSpecific5W(undefined);
                               }
+
+                              if (dumps!.hasOwnProperty("errros")) {
+                                throw Error(
+                                  "No fue posible hacer el getFiveWhyRegister"
+                                );
+                              }
+                              setCurrentSpecific5W(
+                                dumps as {
+                                  id: number;
+                                  date: Date;
+                                  what: string;
+                                  where: string;
+                                  who: string;
+                                  why: string;
+                                  whyDetails: string | null;
+                                  areaId: number;
+                                  comapnyId: number;
+                                }
+                              );
                               setSpecificW5Page(specificw5Page - 1);
                             }
                           }}
@@ -886,13 +938,33 @@ export default function AreaPage({
                           onClick={async () => {
                             if (specificw5Page + 1 > specificw5MaxPages) {
                             } else {
-                              const dumps = await get5wdump(
-                                specificw5Page + 1,
-                                areaInfo.id
-                              );
-                              if (dumps) {
-                                setCurrentSpecific5W(dumps[0]);
+                              const dumps = await getFiveWhyRegister({
+                                index: specificw5Page + 1,
+                                areaId: areaInfo.id,
+                              });
+
+                              if (typeof dumps == null) {
+                                setCurrentSpecific5W(undefined);
                               }
+
+                              if (dumps!.hasOwnProperty("errros")) {
+                                throw Error(
+                                  "No fue posible hacer el getFiveWhyRegister"
+                                );
+                              }
+                              setCurrentSpecific5W(
+                                dumps as {
+                                  id: number;
+                                  date: Date;
+                                  what: string;
+                                  where: string;
+                                  who: string;
+                                  why: string;
+                                  whyDetails: string | null;
+                                  areaId: number;
+                                  comapnyId: number;
+                                }
+                              );
                               setSpecificW5Page(specificw5Page + 1);
                             }
                           }}
