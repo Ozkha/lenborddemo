@@ -98,6 +98,7 @@ export default async function AreaPageSuspended({
   }
 
   const currentDate = new Date();
+  currentDate.setHours(currentDate.getHours() - 6);
   const thisYear = currentDate.getFullYear();
   const thisMonth = currentDate.getMonth() + 1;
   const thisMonthMaxDays = new Date(thisYear, thisMonth, 0).getDate();

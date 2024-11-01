@@ -86,11 +86,14 @@ export default async function BooardPageSuspensed({
   let year = Number(searchParams.year);
   let month = Number(searchParams.month);
 
+  const currentDate = new Date();
+  currentDate.setHours(currentDate.getHours() - 6);
+
   if (!year) {
-    year = new Date().getFullYear();
+    year = currentDate.getFullYear();
   }
   if (!month) {
-    month = new Date().getMonth() + 1;
+    month = currentDate.getMonth() + 1;
   }
 
   year = Number(year);
