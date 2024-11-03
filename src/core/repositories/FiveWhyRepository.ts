@@ -277,7 +277,7 @@ export class FiveWhyRepository implements IFiveWhyRepository {
     const [createdWho] = await this.db
       .select()
       .from(whos)
-      .where(sql`${wheres.id}=${insterWhoResp.insertId}`);
+      .where(sql`${whos.id}=${insterWhoResp.insertId}`);
 
     return {
       id: createdWho.id,
