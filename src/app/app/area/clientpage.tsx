@@ -316,11 +316,13 @@ export default function AreaPage({
                           date: newDate,
                         });
 
-                        if (typeof dumps == null) {
+                        if (!dumps) {
                           setCurrentSpecific5W(undefined);
+                          setSpecificDay5WDialogOpen(true);
+                          return;
                         }
 
-                        if (dumps!.hasOwnProperty("errros")) {
+                        if (dumps!.hasOwnProperty("erros")) {
                           throw Error(
                             "No fue posible hacer el getFiveWhyRegister"
                           );
