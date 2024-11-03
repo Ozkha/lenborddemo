@@ -12,7 +12,7 @@ import {
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import Link from "next/link";
-import { addBoard } from "@/actions/board/addboard";
+import { CreateBoard } from "@/actions/board/createBoard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,7 +123,7 @@ export default function Header({
                 )}
                 <Button
                   onClick={() => {
-                    addBoard({
+                    CreateBoard({
                       name: "sin nombre",
                       companyId: Number(user.companyId),
                     });
