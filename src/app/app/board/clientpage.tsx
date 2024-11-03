@@ -790,10 +790,10 @@ ya directamente el nuevo que agrego. Esto para que el usuario no tenga que borra
                                         },
                                       ]);
                                       // --------------
-                                      const newWhyId = await addWhy({
-                                        label: val,
-                                        companyId: Number(user.companyId),
-                                      });
+                                      // const newWhyId = await addWhy({
+                                      //   label: val,
+                                      //   companyId: Number(user.companyId),
+                                      // });
                                       setWhysList([
                                         ...whysList,
                                         { value: newWhyParsed.id, label: val },

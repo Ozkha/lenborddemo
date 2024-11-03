@@ -3,7 +3,6 @@
 import { AreaRepository } from "@/core/repositories/AreaRepository";
 import { CreateAreaWrapper } from "@/core/usecases/area/CreateArea";
 import { db } from "@/db";
-import { error } from "console";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 

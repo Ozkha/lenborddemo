@@ -1,7 +1,6 @@
 "use server";
 
 import { FiveWhyRepository } from "@/core/repositories/FiveWhyRepository";
-import { CreateWhereWrapper } from "@/core/usecases/fivewhy/CreateWhere";
 import { CreateWhoWrapper } from "@/core/usecases/fivewhy/CreateWho";
 import { db } from "@/db";
 import { z } from "zod";
