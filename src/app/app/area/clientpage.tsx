@@ -299,7 +299,7 @@ export default function AreaPage({
                         );
                         setSpecific5wsDate(newDate);
                         const ttlEntries = await getFiveWhyTotalEntries({
-                          areaId: 1,
+                          areaId: areaInfo.id,
                           date: new Date(),
                         });
 
@@ -322,7 +322,7 @@ export default function AreaPage({
                           return;
                         }
 
-                        if (dumps!.hasOwnProperty("erros")) {
+                        if (dumps!.hasOwnProperty("errors")) {
                           throw Error(
                             "No fue posible hacer el getFiveWhyRegister"
                           );
