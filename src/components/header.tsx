@@ -152,7 +152,7 @@ export default function Header({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Ajustes</DropdownMenuItem>
+              {/* <DropdownMenuItem>Ajustes</DropdownMenuItem> */}
               {/* <DropdownMenuItem>Soporte</DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem>
