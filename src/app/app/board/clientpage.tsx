@@ -459,7 +459,7 @@ export default function BoardPage({
                       <FormLabel>Nombre del area</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Ej. Security, Calidad, People, Gasto"
+                          placeholder="Ej. Security, Calidad, Entrega, Gasto"
                           type="text"
                           {...field}
                         />
