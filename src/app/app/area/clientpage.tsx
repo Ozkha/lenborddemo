@@ -57,6 +57,7 @@ import {
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
   SquareCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -70,9 +71,133 @@ import { CreateTask } from "@/actions/task/createTask";
 
 import { getFiveWhyTotalEntries } from "@/actions/fivewhy/getFiveWhyTotalEntries";
 import { Session } from "next-auth";
+import { DatePickerRange } from "@/components/ui-compounded/daterangepicker";
+
+// components/MarkdownRenderer.tsx
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+// Definimos las props que recibirá nuestro componente
+interface MarkdownRendererProps {
+  content: string;
+}
+
+export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]} // Activamos el plugin para tablas, etc.
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
 
 // TODO:
 // Me falto que se hiciera funcional la pestania de ajustes en area page.
+
+// components/IntelligentSuggestionDialog.tsx
+
+import { Loader2, AlertTriangle } from "lucide-react";
+
+// Este componente ahora es "inteligente". Maneja su propio estado y la llamada a la API.
+export function IntelligentSuggestionDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFetchAnalysis = async () => {
+    // Si ya tenemos un análisis, no lo volvemos a pedir en la misma sesión del diálogo
+    if (analysis) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Llamamos a la API que creaste.
+      // Asegúrate que la URL coincida con la ubicación de tu archivo de API.
+      const response = await fetch("/api/analyzew");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Ocurrió un error al obtener la sugerencia."
+        );
+      }
+
+      const data = await response.json();
+      setAnalysis(data.cleanedAnalysis);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      // Cuando el diálogo se abre, llamamos a la función para obtener los datos.
+      handleFetchAnalysis();
+    } else {
+      // Opcional: Reseteamos el estado cuando el diálogo se cierra.
+      setAnalysis(null);
+      setError(null);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+          <Sparkles className="w-4 h-4 mr-2" />
+          Generar Sugerencia Inteligente
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[625px] max-h-[650px] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
+            Análisis y Sugerencias Estratégicas
+          </DialogTitle>
+          <DialogDescription>
+            Análisis generado por IA basado en los últimos 6 reportes de
+            incidentes aleatorios.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4">
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Analizando datos y conectando con la IA (Este proceso puede
+                tardar un par de minutos)...
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex flex-col items-center justify-center h-full text-destructive">
+              <AlertTriangle className="h-8 w-8" />
+              <p className="mt-2 font-semibold">Error al generar el análisis</p>
+              <p className="text-sm text-center">{error}</p>
+            </div>
+          )}
+
+          {analysis && (
+            // Usamos 'whitespace-pre-wrap' para respetar los saltos de línea y el formato del LLM
+            <div className="text-sm text-foreground whitespace-pre-wrap p-4 bg-secondary rounded-md">
+              {/* {analysis} */}
+              <MarkdownRenderer content={analysis} />
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 type AreaPageProps = {
   user: Session["user"];
@@ -288,61 +413,6 @@ export default function AreaPage({
                   </CardHeader>
                   <CardContent>
                     <Tracker
-                      onClick={async (day) => {
-                        // TODO:
-                        // 2. Al darle click se haran query de los datos especificos de esos dias
-                        // 3. Se haran lo mismo que el 5w card que esta en el normal.
-                        const newDate = new Date(
-                          areaSelectedDateData.date.getFullYear(),
-                          areaCurrentDateData.date.getMonth(),
-                          day
-                        );
-                        setSpecific5wsDate(newDate);
-                        const ttlEntries = await getFiveWhyTotalEntries({
-                          areaId: areaInfo.id,
-                          date: new Date(),
-                        });
-
-                        if (typeof ttlEntries !== "number") {
-                          throw Error(
-                            "No se loggro obtener el total de entradas"
-                          );
-                        }
-
-                        setSpecificW5MaxPages(ttlEntries);
-                        const dumps = await getFiveWhyRegister({
-                          index: 0,
-                          areaId: areaInfo.id,
-                          date: newDate,
-                        });
-
-                        if (!dumps) {
-                          setCurrentSpecific5W(undefined);
-                          setSpecificDay5WDialogOpen(true);
-                          return;
-                        }
-
-                        if (dumps!.hasOwnProperty("errors")) {
-                          throw Error(
-                            "No fue posible hacer el getFiveWhyRegister"
-                          );
-                        }
-                        setCurrentSpecific5W(
-                          dumps as {
-                            id: number;
-                            date: Date;
-                            what: string;
-                            where: string;
-                            who: string;
-                            why: string;
-                            whyDetails: string | null;
-                            areaId: number;
-                            comapnyId: number;
-                          }
-                        );
-
-                        setSpecificDay5WDialogOpen(true);
-                      }}
                       data={(() => {
                         const finalData: { color: string; tooltip: string }[] =
                           [];
@@ -416,7 +486,7 @@ export default function AreaPage({
                 <CardHeader className="px-7">
                   <CardTitle className="flex items-center justify-between">
                     <p>Causas</p>
-                    <Dialog>
+                    {/* <Dialog>
                       <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                         <SquareCheck className="w-4 h-4 mr-1" />
                         Asignar Accion
@@ -587,7 +657,15 @@ export default function AreaPage({
                           </form>
                         </Form>
                       </DialogContent>
-                    </Dialog>
+                    </Dialog> */}
+                    {/* <Dialog>
+                      <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <Sparkles className="w-4 h-4 mr-1" />
+                        Sugerencia Inteligente
+                      </DialogTrigger>
+                      <DialogContent></DialogContent>
+                    </Dialog> */}
+                    <IntelligentSuggestionDialog />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col md:flex-row md:gap-4">
@@ -693,6 +771,14 @@ export default function AreaPage({
               </Card>
             </div>
             <div>
+              <DatePickerRange
+                className="mb-2"
+                from={new Date()}
+                to={new Date()}
+              />
+              {/* TODO: AQUI ANDO PARA LA REMODELACION */}
+              {/* Hacer un multiple date picker que pueda filtrar por todo lo que sea de este mes, si es que no ese escoge ninguno
+              en particular, o solo los que se hayan escogido. */}
               <Card className="overflow-hidden">
                 <CardHeader className="flex flex-row items-start bg-muted/50">
                   <div className="grid gap-0.5">
@@ -846,182 +932,6 @@ export default function AreaPage({
           </div>
         </TabsContent>
       </Tabs>
-      <Dialog
-        open={specificDay5WDialogOpen}
-        onOpenChange={(opn) => {
-          setSpecific5wsDate(undefined);
-          setSpecificW5MaxPages(0);
-          setCurrentSpecific5W(undefined);
-          setSpecificDay5WDialogOpen(opn);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              5W -{" "}
-              {specific5wsDate?.toLocaleDateString("es-MX", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-            </DialogTitle>
-          </DialogHeader>
-          <Card className="overflow-hidden">
-            <CardHeader className="flex flex-row items-start bg-muted/50">
-              <div className="grid gap-0.5">
-                <CardTitle className="group flex items-center gap-2 text-lg">
-                  5W
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  {currentSpecific5w
-                    ? currentSpecific5w.date.toLocaleDateString("es-MX", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Vacio"}
-                </CardDescription>
-              </div>
-              <div className="ml-auto flex items-center gap-1">
-                <p className="mr-4 text-sm">
-                  {specificw5Page + 1} / {specificw5MaxPages}
-                </p>
-                {currentSpecific5w ? (
-                  <Pagination className="ml-auto mr-0 w-auto">
-                    <PaginationContent>
-                      <PaginationItem>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-6 w-6"
-                          onClick={async () => {
-                            if (specificw5Page - 1 < 0) {
-                            } else {
-                              const dumps = await getFiveWhyRegister({
-                                index: specificw5Page - 1,
-                                areaId: areaInfo.id,
-                              });
-
-                              if (typeof dumps == null) {
-                                setCurrentSpecific5W(undefined);
-                              }
-
-                              if (dumps!.hasOwnProperty("errros")) {
-                                throw Error(
-                                  "No fue posible hacer el getFiveWhyRegister"
-                                );
-                              }
-                              setCurrentSpecific5W(
-                                dumps as {
-                                  id: number;
-                                  date: Date;
-                                  what: string;
-                                  where: string;
-                                  who: string;
-                                  why: string;
-                                  whyDetails: string | null;
-                                  areaId: number;
-                                  comapnyId: number;
-                                }
-                              );
-                              setSpecificW5Page(specificw5Page - 1);
-                            }
-                          }}
-                        >
-                          <ChevronLeft className="h-3.5 w-3.5" />
-                          <span className="sr-only">Previous Order</span>
-                        </Button>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-6 w-6"
-                          onClick={async () => {
-                            if (specificw5Page + 1 > specificw5MaxPages) {
-                            } else {
-                              const dumps = await getFiveWhyRegister({
-                                index: specificw5Page + 1,
-                                areaId: areaInfo.id,
-                              });
-
-                              if (typeof dumps == null) {
-                                setCurrentSpecific5W(undefined);
-                              }
-
-                              if (dumps!.hasOwnProperty("errros")) {
-                                throw Error(
-                                  "No fue posible hacer el getFiveWhyRegister"
-                                );
-                              }
-                              setCurrentSpecific5W(
-                                dumps as {
-                                  id: number;
-                                  date: Date;
-                                  what: string;
-                                  where: string;
-                                  who: string;
-                                  why: string;
-                                  whyDetails: string | null;
-                                  areaId: number;
-                                  comapnyId: number;
-                                }
-                              );
-                              setSpecificW5Page(specificw5Page + 1);
-                            }
-                          }}
-                        >
-                          <ChevronRight className="h-3.5 w-3.5" />
-                          <span className="sr-only">Next Order</span>
-                        </Button>
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                ) : (
-                  <></>
-                )}
-              </div>
-            </CardHeader>
-            {currentSpecific5w ? (
-              <CardContent className="p-6 text-sm">
-                <div className="grid gap-3">
-                  <div className="font-semibold">Que?</div>
-                  <p className="text-muted-foreground">
-                    {currentSpecific5w.what}
-                  </p>
-                </div>
-                <Separator className="my-4" />
-                <div className="grid gap-3">
-                  <div className="font-semibold">Donde?</div>
-                  <div>
-                    <Badge>{currentSpecific5w.where}</Badge>
-                  </div>
-                </div>
-                <Separator className="my-4" />
-                <div className="grid gap-3">
-                  <div className="font-semibold">Quien?</div>
-                  <div>
-                    <Badge>{currentSpecific5w.who}</Badge>
-                  </div>
-                </div>
-                <Separator className="my-4" />
-                <div className="grid gap-3">
-                  <div className="font-semibold">Porque / Causa?</div>
-                  <div className="flex gap-2">
-                    <Badge>{currentSpecific5w.why}</Badge>
-                  </div>
-                  <p>Descripcion:</p>
-                  <p className="text-muted-foreground text-sm">
-                    {currentSpecific5w.whyDetails}
-                  </p>
-                </div>
-              </CardContent>
-            ) : (
-              <></>
-            )}
-          </Card>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }

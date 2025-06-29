@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   json,
@@ -211,3 +212,13 @@ export const tasks = mysqlTable("tasks", {
 });
 
 export type newTask = typeof tasks.$inferInsert;
+
+export const intelligent_suggestions = mysqlTable("suggestions_ia", {
+  id: serial("id").primaryKey(),
+  date_generated: timestamp("date_generated", { fsp: 2, mode: "date" })
+    .notNull()
+    .default(sql`now()`),
+  suggestion: varchar("suggestion", { length: 10000 }).notNull(),
+});
+
+export type newSuggestion = typeof intelligent_suggestions.$inferInsert;
