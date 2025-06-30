@@ -407,9 +407,9 @@ export default function UsersPage({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="worker">
+                                {/* <SelectItem value="worker">
                                   Trabajador
-                                </SelectItem>
+                                </SelectItem> */}
                                 <SelectItem value="board_moderator">
                                   Manager de Tablero
                                 </SelectItem>
@@ -513,7 +513,7 @@ export default function UsersPage({
                         <SelectItem value={Role.BOARD_MODERATOR}>
                           Manager de Tablero
                         </SelectItem>
-                        <SelectItem value={Role.WORKER}>Trabajador</SelectItem>
+                        {/* <SelectItem value={Role.WORKER}>Trabajador</SelectItem> */}
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -599,7 +599,7 @@ export default function UsersPage({
                             <SelectItem value="board_moderator">
                               Manager de Tablero
                             </SelectItem>
-                            <SelectItem value="worker">Trabajador</SelectItem>
+                            {/* <SelectItem value="worker">Trabajador</SelectItem> */}
                           </SelectContent>
                         </Select>
                         {LUser.role == "admin"
