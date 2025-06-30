@@ -65,7 +65,7 @@ export default function Header({
                   <Package2 className="h-6 w-6" />
                   <span className="sr-only">Lenbord</span>
                 </Link>
-                <Link
+                {/* <Link
                   href="/app/tasks"
                   className={cn([
                     "flex items-center gap-4 pr-2.5 hover:text-foreground",
@@ -76,7 +76,7 @@ export default function Header({
                 >
                   <ListTodo className="h-5 w-5"></ListTodo>
                   Acciones
-                </Link>
+                </Link> */}
                 <Link
                   href="/app/users"
                   className={cn([
