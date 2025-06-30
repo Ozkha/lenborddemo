@@ -12,7 +12,7 @@ import { eq, sql } from "drizzle-orm";
 
 const client = new InferenceClient(process.env.HF_TOKEN);
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const dbb = await db;
 
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     const chatCompletion = await client.chatCompletion({
       provider: "novita",
       //   model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
-      model: "deepseek-ai/DeepSeek-V3-0324",
+      model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
